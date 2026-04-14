@@ -8,10 +8,13 @@ http_server:
 chains:
   - chain_name: "Bitcoin"
     chain_id: "DappLinkBitcoin"
-    netword: mainnet
+    network: mainnet
   - chain_name: "Ethereum"
     chain_id: "DappLinkEthereum"
-    netword: mainnet
+    network: mainnet
+  - chain_name: "Ton"
+    chain_id: "DappLinkTon"
+    network: mainnet
 
 
 wallet_node:
@@ -23,6 +26,15 @@ wallet_node:
     data_api_key: 'HZEZGEPJJDA633N421AYW9NE8JFNZZC7JT'
     data_api_token: ''
     time_out: 15
+
+  ton:
+    rpc_url: 'https://toncenter.com'
+    rpc_user: ''
+    rpc_pass: ''
+    data_api_url: ''
+    data_api_key: ''
+    data_api_token: ''
+    time_out: 30
 
   btc:
     rpc_url: 'bitcoin-mainnet.core.chainstack.com'

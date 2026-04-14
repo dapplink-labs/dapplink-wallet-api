@@ -15,12 +15,14 @@ require (
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/status-im/keycard-go v0.2.0
 	github.com/urfave/cli/v2 v2.27.5
+	github.com/xssnick/tonutils-go v1.16.0
 	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/bits-and-blooms/bitset v1.20.0 // indirect
