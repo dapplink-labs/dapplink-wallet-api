@@ -127,6 +127,7 @@ func (c ChainAdaptor) ValidAddresses(ctx context.Context, req *wallet_api.ValidA
 		} else {
 			addrValid.Valid = true
 		}
+		addressesValidList = append(addressesValidList, &addrValid)
 	}
 	return &wallet_api.ValidAddressesResponse{
 		Code:         wallet_api.ReturnCode_SUCCESS,
@@ -136,51 +137,72 @@ func (c ChainAdaptor) ValidAddresses(ctx context.Context, req *wallet_api.ValidA
 }
 
 func (c ChainAdaptor) GetLastestBlock(ctx context.Context, req *wallet_api.LastestBlockRequest) (*wallet_api.LastestBlockResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.LastestBlockResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) GetBlock(ctx context.Context, req *wallet_api.BlockRequest) (*wallet_api.BlockResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.BlockResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) GetTransactionByHash(ctx context.Context, req *wallet_api.TransactionByHashRequest) (*wallet_api.TransactionByHashResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.TransactionByHashResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) GetTransactionByAddress(ctx context.Context, req *wallet_api.TransactionByAddressRequest) (*wallet_api.TransactionByAddressResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.TransactionByAddressResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) GetAccountBalance(ctx context.Context, req *wallet_api.AccountBalanceRequest) (*wallet_api.AccountBalanceResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.AccountBalanceResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) SendTransaction(ctx context.Context, req *wallet_api.SendTransactionsRequest) (*wallet_api.SendTransactionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.SendTransactionResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) BuildTransactionSchema(ctx context.Context, request *wallet_api.TransactionSchemaRequest) (*wallet_api.TransactionSchemaResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.TransactionSchemaResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *wallet_api.UnSignTransactionRequest) (*wallet_api.UnSignTransactionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.UnSignTransactionResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *wallet_api.SignedTransactionRequest) (*wallet_api.SignedTransactionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.SignedTransactionResponse{
+		Code: wallet_api.ReturnCode_ERROR,
+		Msg:  "not implemented for Bitcoin",
+	}, nil
 }
 
 func (c ChainAdaptor) GetAddressApproveList(ctx context.Context, request *wallet_api.AddressApproveListRequest) (*wallet_api.AddressApproveListResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &wallet_api.AddressApproveListResponse{
+		Code:      wallet_api.ReturnCode_SUCCESS,
+		Msg:       "not applicable for Bitcoin",
+		Contracts: nil,
+	}, nil
 }

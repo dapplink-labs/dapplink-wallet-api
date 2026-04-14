@@ -32,3 +32,5 @@ go.work.sum
 # .vscode/
 wallet-api
 
+.cursor
+docs
