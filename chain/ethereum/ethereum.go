@@ -468,11 +468,6 @@ func (c ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *walle
 	}, nil
 }
 
-func (c ChainAdaptor) GetAddressApproveList(ctx context.Context, request *wallet_api.AddressApproveListRequest) (*wallet_api.AddressApproveListResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (c *ChainAdaptor) buildDynamicFeeTx(base64Tx string) (*types.DynamicFeeTx, *evmbase.Eip1559DynamicFeeTx, error) {
 	// 1. Decode base64 string
 	txReqJsonByte, err := base64.StdEncoding.DecodeString(base64Tx)
@@ -540,4 +535,11 @@ func (c *ChainAdaptor) buildDynamicFeeTx(base64Tx string) (*types.DynamicFeeTx, 
 		Data:      buildData,
 	}
 	return dFeeTx, &dynamicFeeTx, nil
+}
+
+func (c ChainAdaptor) GetAddressApproveList(ctx context.Context, request *wallet_api.AddressApproveListRequest) (*wallet_api.AddressApproveListResponse, error) {
+	return &wallet_api.AddressApproveListResponse{
+		Code: wallet_api.ApiReturnCode_APISUCCESS,
+		Msg:  "don't support in this stage, support in the future",
+	}, nil
 }

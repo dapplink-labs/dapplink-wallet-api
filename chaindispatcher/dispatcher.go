@@ -5,13 +5,14 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/dapplink-labs/dapplink-wallet-api/chain/bitcoin"
-	"github.com/ethereum/go-ethereum/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/ethereum/go-ethereum/log"
+
 	"github.com/dapplink-labs/dapplink-wallet-api/chain"
+	"github.com/dapplink-labs/dapplink-wallet-api/chain/bitcoin"
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/ethereum"
 	"github.com/dapplink-labs/dapplink-wallet-api/config"
 	wallet_api "github.com/dapplink-labs/dapplink-wallet-api/protobuf/wallet-api"
@@ -163,41 +164,89 @@ func (d *ChainDispatcher) GetBlock(ctx context.Context, request *wallet_api.Bloc
 }
 
 func (d *ChainDispatcher) GetTransactionByHash(ctx context.Context, request *wallet_api.TransactionByHashRequest) (*wallet_api.TransactionByHashResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &wallet_api.TransactionByHashResponse{
+			Code: wallet_api.ApiReturnCode_APIERROR,
+			Msg:  "get transaction by hash failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].GetTransactionByHash(ctx, request)
 }
 
 func (d *ChainDispatcher) GetTransactionByAddress(ctx context.Context, request *wallet_api.TransactionByAddressRequest) (*wallet_api.TransactionByAddressResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &wallet_api.TransactionByAddressResponse{
+			Code: wallet_api.ApiReturnCode_APIERROR,
+			Msg:  "get transaction by address failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].GetTransactionByAddress(ctx, request)
 }
 
 func (d *ChainDispatcher) GetAccountBalance(ctx context.Context, request *wallet_api.AccountBalanceRequest) (*wallet_api.AccountBalanceResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &wallet_api.AccountBalanceResponse{
+			Code: wallet_api.ApiReturnCode_APIERROR,
+			Msg:  "get account balance failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].GetAccountBalance(ctx, request)
 }
 
 func (d *ChainDispatcher) SendTransaction(ctx context.Context, request *wallet_api.SendTransactionsRequest) (*wallet_api.SendTransactionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &wallet_api.SendTransactionResponse{
+			Code: wallet_api.ApiReturnCode_APIERROR,
+			Msg:  "send transaction failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].SendTransaction(ctx, request)
 }
 
 func (d *ChainDispatcher) BuildTransactionSchema(ctx context.Context, request *wallet_api.TransactionSchemaRequest) (*wallet_api.TransactionSchemaResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &wallet_api.TransactionSchemaResponse{
+			Code: wallet_api.ApiReturnCode_APIERROR,
+			Msg:  "build transaction schema failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].BuildTransactionSchema(ctx, request)
 }
 
 func (d *ChainDispatcher) BuildUnSignTransaction(ctx context.Context, request *wallet_api.UnSignTransactionRequest) (*wallet_api.UnSignTransactionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &wallet_api.UnSignTransactionResponse{
+			Code: wallet_api.ApiReturnCode_APIERROR,
+			Msg:  "build unsigned transaction failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].BuildUnSignTransaction(ctx, request)
 }
 
 func (d *ChainDispatcher) BuildSignedTransaction(ctx context.Context, request *wallet_api.SignedTransactionRequest) (*wallet_api.SignedTransactionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &wallet_api.SignedTransactionResponse{
+			Code: wallet_api.ApiReturnCode_APIERROR,
+			Msg:  "build signed transaction failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].BuildSignedTransaction(ctx, request)
 }
 
 func (d *ChainDispatcher) GetAddressApproveList(ctx context.Context, request *wallet_api.AddressApproveListRequest) (*wallet_api.AddressApproveListResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &wallet_api.AddressApproveListResponse{
+			Code: wallet_api.ApiReturnCode_APIERROR,
+			Msg:  "get address approve list failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].GetAddressApproveList(ctx, request)
 }
