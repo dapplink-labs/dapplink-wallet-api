@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcutil/base58"
-
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/fbsobreira/gotron-sdk/pkg/address"
 
@@ -88,8 +86,8 @@ func (c *ChainAdaptor) ValidAddresses(ctx context.Context, req *wallet_api.Valid
 		})
 	}
 	return &wallet_api.ValidAddressesResponse{
-		Code:          wallet_api.ApiReturnCode_APISUCCESS,
-		Msg:           "success",
+		Code:         wallet_api.ApiReturnCode_APISUCCESS,
+		Msg:          "success",
 		AddressValid: retAddressList,
 	}, nil
 }
@@ -208,8 +206,8 @@ func (c *ChainAdaptor) GetTransactionByHash(ctx context.Context, req *wallet_api
 	}
 
 	return &wallet_api.TransactionByHashResponse{
-		Code:        wallet_api.ApiReturnCode_APISUCCESS,
-		Msg:         "success",
+		Code: wallet_api.ApiReturnCode_APISUCCESS,
+		Msg:  "success",
 		Transaction: &wallet_api.TransactionList{
 			TxHash:          req.Hash,
 			From:            fromAddrs,
@@ -346,32 +344,4 @@ func (c *ChainAdaptor) GetAddressApproveList(ctx context.Context, request *walle
 		Code: wallet_api.ApiReturnCode_APISUCCESS,
 		Msg:  "don't support in this stage, support in the future",
 	}, nil
-}
-
-// Helper functions
-func HexToTronAddress(hexAddr string) string {
-	hexAddr = strings.TrimPrefix(hexAddr, "0x")
-	addrBytes, err := hex.DecodeString(hexAddr)
-	if err != nil {
-		return ""
-	}
-	return base58.CheckEncode(addrBytes[1:], addrBytes[0])
-}
-
-func TronAddressToHex(addr string) string {
-	decoded, version, err := base58.CheckDecode(addr)
-	if err != nil {
-		return ""
-	}
-	return "0x" + hex.EncodeToString(append([]byte{version}, decoded...))
-}
-
-func FormatTronAddress(address string) string {
-	if strings.HasPrefix(address, "T") {
-		return "0x" + hex.EncodeToString(base58.Decode(address))
-	}
-	if !strings.HasPrefix(address, "0x") {
-		return "0x" + address
-	}
-	return address
 }

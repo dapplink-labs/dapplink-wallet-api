@@ -12,7 +12,12 @@ chains:
   - chain_name: "Ethereum"
     chain_id: "DappLinkEthereum"
     netword: mainnet
-
+  - chain_name: "Solana"
+    chain_id: "DappLinkSolana"
+    netword: mainnet
+  - chain_name: "Tron"
+    chain_id: "DappLinkTron"
+    netword: mainnet
 
 wallet_node:
   eth:

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/solana"
+	"github.com/dapplink-labs/dapplink-wallet-api/chain/tron"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -48,11 +49,13 @@ func NewChainDispatcher(conf *config.Config) (*ChainDispatcher, error) {
 		ethereum.ChainID: ethereum.NewChainAdaptor,
 		bitcoin.ChainID:  bitcoin.NewChainAdaptor,
 		solana.ChainID:   solana.NewChainAdaptor,
+		tron.ChainID:     tron.NewChainAdaptor,
 	}
 	supportedChains := []string{
 		ethereum.ChainID,
 		bitcoin.ChainID,
 		solana.ChainID,
+		tron.ChainID,
 	}
 
 	for _, c := range conf.Chains {

@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strings"
 
+	base582 "github.com/btcsuite/btcutil/base58"
 	"github.com/fbsobreira/gotron-sdk/pkg/address"
 	"github.com/mr-tron/base58"
 )
@@ -61,4 +62,32 @@ func ParseTRC20TransferData(data string) (string, *big.Int) {
 	value := new(big.Int)
 	value.SetString(valueHex, 16) // Parse hexadecimal to integer
 	return toAddress.String(), value
+}
+
+// Helper functions
+func HexToTronAddress(hexAddr string) string {
+	hexAddr = strings.TrimPrefix(hexAddr, "0x")
+	addrBytes, err := hex.DecodeString(hexAddr)
+	if err != nil {
+		return ""
+	}
+	return base582.CheckEncode(addrBytes[1:], addrBytes[0])
+}
+
+func TronAddressToHex(addr string) string {
+	decoded, version, err := base582.CheckDecode(addr)
+	if err != nil {
+		return ""
+	}
+	return "0x" + hex.EncodeToString(append([]byte{version}, decoded...))
+}
+
+func FormatTronAddress(address string) string {
+	if strings.HasPrefix(address, "T") {
+		return "0x" + hex.EncodeToString(base582.Decode(address))
+	}
+	if !strings.HasPrefix(address, "0x") {
+		return "0x" + address
+	}
+	return address
 }
