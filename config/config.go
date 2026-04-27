@@ -14,14 +14,15 @@ type Server struct {
 }
 
 type Node struct {
-	RpcUrl       string `yaml:"rpc_url"`
-	RpcUser      string `yaml:"rpc_user"`
-	RpcPass      string `yaml:"rpc_pass"`
-	DataApiUrl   string `yaml:"data_api_url"`
-	DataApiKey   string `yaml:"data_api_key"`
-	DataApiToken string `yaml:"data_api_token"`
-	TpApiUrl     string `yaml:"tp_api_url"`
-	TimeOut      uint64 `yaml:"time_out"`
+	RpcUrl          string `yaml:"rpc_url"`
+	RpcUser         string `yaml:"rpc_user"`
+	RpcPass         string `yaml:"rpc_pass"`
+	DataApiUrl      string `yaml:"data_api_url"`
+	DataApiKey      string `yaml:"data_api_key"`
+	DataApiToken    string `yaml:"data_api_token"`
+	TpApiUrl        string `yaml:"tp_api_url"`
+	TimeOut         uint64 `yaml:"time_out"`
+	SubstrateRpcUrl string `yaml:"substrate_rpc_url"`
 }
 
 type WalletNode struct {
@@ -33,6 +34,8 @@ type WalletNode struct {
 	Base    Node `yaml:"evmbase"`
 	Polygon Node `yaml:"polygon"`
 	Tron    Node `yaml:"tron"`
+	Dot     Node `yaml:"dot"`
+	Ksm     Node `yaml:"ksm"`
 }
 
 type Chain struct {

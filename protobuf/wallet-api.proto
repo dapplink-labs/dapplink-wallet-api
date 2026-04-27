@@ -169,12 +169,19 @@ message AccountBalanceRequest {
   string address = 4;
   string contract_address = 5;
 }
+message TokenBalance {
+  string symbol = 1;
+  string balance = 2;
+  string contract_address = 3;
+  uint32 decimals = 4;
+}
 
 message AccountBalanceResponse {
   ApiReturnCode code = 1;
   string msg = 2;
   string network = 3;
   string balance = 4;
+  repeated TokenBalance token_balances = 5;
 }
 
 message RawTransaction {

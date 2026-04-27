@@ -18,6 +18,18 @@ chains:
   - chain_name: "Tron"
     chain_id: "DappLinkTron"
     netword: mainnet
+  - chain_name: "PolkadotHub"
+    chain_id: "DappLinkPolkadotHub"
+    netword: mainnet
+  - chain_name: "PolkadotSubstrate"
+    chain_id: "DappLinkPolkadotSubstrate"
+    netword: mainnet
+  - chain_name: "KusamaHub"
+    chain_id: "DappLinkKusamaHub"
+    netword: mainnet
+  - chain_name: "KusamaSubstrate"
+    chain_id: "DappLinkKusamaSubstrate"
+    netword: mainnet
 
 wallet_node:
   eth:
@@ -38,6 +50,25 @@ wallet_node:
     data_api_token: ''
     time_out: 100
     tp_api_url: 'https://blockchain.info/'
+  dot:
+    rpc_url: 'https://services.polkadothub-rpc.com/mainnet'
+    rpc_user: ''
+    rpc_pass: ''
+    data_api_url: 'https://blockscout.polkadot.io/api?'
+    data_api_key: ''
+    data_api_token: ''
+    substrate_rpc_url: 'wss://polkadot-asset-hub-rpc.polkadot.io'
+    time_out: 15
+
+  ksm:
+    rpc_url: 'https://eth-rpc-kusama.polkadot.io/'
+    rpc_user: ''
+    rpc_pass: ''
+    data_api_url: 'https://blockscout-kusama.polkadot.io/api?'
+    data_api_key: ''
+    data_api_token: ''
+    substrate_rpc_url: 'wss://rpc.kusama.io'
+    time_out: 15
 
 network: mainnet
 enable_api_cache: false
