@@ -779,6 +779,8 @@ type LastestBlockResponse struct {
 	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
 	Height        uint64                 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
 	Hash          string                 `protobuf:"bytes,4,opt,name=hash,proto3" json:"hash,omitempty"`
+	ParentHash    string                 `protobuf:"bytes,5,opt,name=parent_hash,json=parentHash,proto3" json:"parent_hash,omitempty"`
+	Timestamp     uint64                 `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -839,6 +841,20 @@ func (x *LastestBlockResponse) GetHash() string {
 		return x.Hash
 	}
 	return ""
+}
+
+func (x *LastestBlockResponse) GetParentHash() string {
+	if x != nil {
+		return x.ParentHash
+	}
+	return ""
+}
+
+func (x *LastestBlockResponse) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
 }
 
 type FromAddress struct {
@@ -1135,7 +1151,9 @@ type BlockResponse struct {
 	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
 	Height        string                 `protobuf:"bytes,3,opt,name=height,proto3" json:"height,omitempty"`
 	Hash          string                 `protobuf:"bytes,4,opt,name=hash,proto3" json:"hash,omitempty"`
-	Transactions  []*TransactionList     `protobuf:"bytes,5,rep,name=transactions,proto3" json:"transactions,omitempty"`
+	ParentHash    string                 `protobuf:"bytes,5,opt,name=parent_hash,json=parentHash,proto3" json:"parent_hash,omitempty"`
+	Timestamp     uint64                 `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Transactions  []*TransactionList     `protobuf:"bytes,7,rep,name=transactions,proto3" json:"transactions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1196,6 +1214,20 @@ func (x *BlockResponse) GetHash() string {
 		return x.Hash
 	}
 	return ""
+}
+
+func (x *BlockResponse) GetParentHash() string {
+	if x != nil {
+		return x.ParentHash
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
 }
 
 func (x *BlockResponse) GetTransactions() []*TransactionList {
@@ -2669,12 +2701,15 @@ const file_dapplink_walletapi_proto_rawDesc = "" +
 	"\x13LastestBlockRequest\x12%\n" +
 	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\tR\achainId\x12\x18\n" +
-	"\anetwork\x18\x03 \x01(\tR\anetwork\"~\n" +
+	"\anetwork\x18\x03 \x01(\tR\anetwork\"\xbd\x01\n" +
 	"\x14LastestBlockResponse\x12(\n" +
 	"\x04code\x18\x01 \x01(\x0e2\x14.dapplink.ReturnCodeR\x04code\x12\x10\n" +
 	"\x03msg\x18\x02 \x01(\tR\x03msg\x12\x16\n" +
 	"\x06height\x18\x03 \x01(\x04R\x06height\x12\x12\n" +
-	"\x04hash\x18\x04 \x01(\tR\x04hash\"\\\n" +
+	"\x04hash\x18\x04 \x01(\tR\x04hash\x12\x1f\n" +
+	"\vparent_hash\x18\x05 \x01(\tR\n" +
+	"parentHash\x12\x1c\n" +
+	"\ttimestamp\x18\x06 \x01(\x04R\ttimestamp\"\\\n" +
 	"\vFromAddress\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x16\n" +
 	"\x06amount\x18\x02 \x01(\tR\x06amount\x12\x1b\n" +
@@ -2697,13 +2732,16 @@ const file_dapplink_walletapi_proto_rawDesc = "" +
 	"\anetwork\x18\x03 \x01(\tR\anetwork\x12\x1f\n" +
 	"\vhash_height\x18\x04 \x01(\tR\n" +
 	"hashHeight\x12\"\n" +
-	"\ris_block_hash\x18\x05 \x01(\bR\visBlockHash\"\xb6\x01\n" +
+	"\ris_block_hash\x18\x05 \x01(\bR\visBlockHash\"\xf5\x01\n" +
 	"\rBlockResponse\x12(\n" +
 	"\x04code\x18\x01 \x01(\x0e2\x14.dapplink.ReturnCodeR\x04code\x12\x10\n" +
 	"\x03msg\x18\x02 \x01(\tR\x03msg\x12\x16\n" +
 	"\x06height\x18\x03 \x01(\tR\x06height\x12\x12\n" +
-	"\x04hash\x18\x04 \x01(\tR\x04hash\x12=\n" +
-	"\ftransactions\x18\x05 \x03(\v2\x19.dapplink.TransactionListR\ftransactions\"\x8a\x01\n" +
+	"\x04hash\x18\x04 \x01(\tR\x04hash\x12\x1f\n" +
+	"\vparent_hash\x18\x05 \x01(\tR\n" +
+	"parentHash\x12\x1c\n" +
+	"\ttimestamp\x18\x06 \x01(\x04R\ttimestamp\x12=\n" +
+	"\ftransactions\x18\a \x03(\v2\x19.dapplink.TransactionListR\ftransactions\"\x8a\x01\n" +
 	"\x18TransactionByHashRequest\x12%\n" +
 	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\tR\achainId\x12\x18\n" +

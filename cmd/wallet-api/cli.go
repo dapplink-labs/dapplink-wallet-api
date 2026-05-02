@@ -5,13 +5,13 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/urfave/cli/v2"
 
 	"github.com/dapplink-labs/dapplink-wallet-api/common/cliapp"
 	"github.com/dapplink-labs/dapplink-wallet-api/config"
 	flags2 "github.com/dapplink-labs/dapplink-wallet-api/flags"
 	"github.com/dapplink-labs/dapplink-wallet-api/services/grpc"
-	"github.com/ethereum/go-ethereum/log"
 )
 
 func runRpc(ctx *cli.Context, shutdown context.CancelCauseFunc) (cliapp.Lifecycle, error) {

@@ -7,12 +7,12 @@
 package dapplinkwallet
 
 import (
+	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/common"
 )
 
 const (

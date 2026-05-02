@@ -654,17 +654,96 @@ func (x *CreateKeyPairsWithAddressesResponse) GetPublicKeyAddresses() []*ExportP
 	return nil
 }
 
+type TransactionBody struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	FromAddress   string                 `protobuf:"bytes,2,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress     string                 `protobuf:"bytes,3,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	Amount        string                 `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	TokenAddress  string                 `protobuf:"bytes,5,opt,name=token_address,json=tokenAddress,proto3" json:"token_address,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TransactionBody) Reset() {
+	*x = TransactionBody{}
+	mi := &file_dapplink_walletsign_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TransactionBody) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TransactionBody) ProtoMessage() {}
+
+func (x *TransactionBody) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_walletsign_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TransactionBody.ProtoReflect.Descriptor instead.
+func (*TransactionBody) Descriptor() ([]byte, []int) {
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *TransactionBody) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *TransactionBody) GetFromAddress() string {
+	if x != nil {
+		return x.FromAddress
+	}
+	return ""
+}
+
+func (x *TransactionBody) GetToAddress() string {
+	if x != nil {
+		return x.ToAddress
+	}
+	return ""
+}
+
+func (x *TransactionBody) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+func (x *TransactionBody) GetTokenAddress() string {
+	if x != nil {
+		return x.TokenAddress
+	}
+	return ""
+}
+
 type SignTransactionMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PublicKey     string                 `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
 	MessageHash   string                 `protobuf:"bytes,2,opt,name=message_hash,json=messageHash,proto3" json:"message_hash,omitempty"`
+	RiskKeyHash   string                 `protobuf:"bytes,3,opt,name=risk_key_hash,json=riskKeyHash,proto3" json:"risk_key_hash,omitempty"`
+	WalletKeyHash string                 `protobuf:"bytes,4,opt,name=wallet_key_hash,json=walletKeyHash,proto3" json:"wallet_key_hash,omitempty"`
+	TxBody        *TransactionBody       `protobuf:"bytes,5,opt,name=tx_body,json=txBody,proto3" json:"tx_body,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SignTransactionMessage) Reset() {
 	*x = SignTransactionMessage{}
-	mi := &file_dapplink_walletsign_proto_msgTypes[10]
+	mi := &file_dapplink_walletsign_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -676,7 +755,7 @@ func (x *SignTransactionMessage) String() string {
 func (*SignTransactionMessage) ProtoMessage() {}
 
 func (x *SignTransactionMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_dapplink_walletsign_proto_msgTypes[10]
+	mi := &file_dapplink_walletsign_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -689,7 +768,7 @@ func (x *SignTransactionMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignTransactionMessage.ProtoReflect.Descriptor instead.
 func (*SignTransactionMessage) Descriptor() ([]byte, []int) {
-	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{10}
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SignTransactionMessage) GetPublicKey() string {
@@ -706,6 +785,27 @@ func (x *SignTransactionMessage) GetMessageHash() string {
 	return ""
 }
 
+func (x *SignTransactionMessage) GetRiskKeyHash() string {
+	if x != nil {
+		return x.RiskKeyHash
+	}
+	return ""
+}
+
+func (x *SignTransactionMessage) GetWalletKeyHash() string {
+	if x != nil {
+		return x.WalletKeyHash
+	}
+	return ""
+}
+
+func (x *SignTransactionMessage) GetTxBody() *TransactionBody {
+	if x != nil {
+		return x.TxBody
+	}
+	return nil
+}
+
 type SignTransactionsMessageRequest struct {
 	state         protoimpl.MessageState    `protogen:"open.v1"`
 	ConsumerToken string                    `protobuf:"bytes,1,opt,name=consumer_token,json=consumerToken,proto3" json:"consumer_token,omitempty"`
@@ -718,7 +818,7 @@ type SignTransactionsMessageRequest struct {
 
 func (x *SignTransactionsMessageRequest) Reset() {
 	*x = SignTransactionsMessageRequest{}
-	mi := &file_dapplink_walletsign_proto_msgTypes[11]
+	mi := &file_dapplink_walletsign_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -730,7 +830,7 @@ func (x *SignTransactionsMessageRequest) String() string {
 func (*SignTransactionsMessageRequest) ProtoMessage() {}
 
 func (x *SignTransactionsMessageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dapplink_walletsign_proto_msgTypes[11]
+	mi := &file_dapplink_walletsign_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -743,7 +843,7 @@ func (x *SignTransactionsMessageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignTransactionsMessageRequest.ProtoReflect.Descriptor instead.
 func (*SignTransactionsMessageRequest) Descriptor() ([]byte, []int) {
-	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{11}
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SignTransactionsMessageRequest) GetConsumerToken() string {
@@ -785,7 +885,7 @@ type MsgWithSignature struct {
 
 func (x *MsgWithSignature) Reset() {
 	*x = MsgWithSignature{}
-	mi := &file_dapplink_walletsign_proto_msgTypes[12]
+	mi := &file_dapplink_walletsign_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -797,7 +897,7 @@ func (x *MsgWithSignature) String() string {
 func (*MsgWithSignature) ProtoMessage() {}
 
 func (x *MsgWithSignature) ProtoReflect() protoreflect.Message {
-	mi := &file_dapplink_walletsign_proto_msgTypes[12]
+	mi := &file_dapplink_walletsign_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -810,7 +910,7 @@ func (x *MsgWithSignature) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MsgWithSignature.ProtoReflect.Descriptor instead.
 func (*MsgWithSignature) Descriptor() ([]byte, []int) {
-	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{12}
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *MsgWithSignature) GetMessageHash() string {
@@ -846,7 +946,7 @@ type SignTransactionsMessageResponse struct {
 
 func (x *SignTransactionsMessageResponse) Reset() {
 	*x = SignTransactionsMessageResponse{}
-	mi := &file_dapplink_walletsign_proto_msgTypes[13]
+	mi := &file_dapplink_walletsign_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -858,7 +958,7 @@ func (x *SignTransactionsMessageResponse) String() string {
 func (*SignTransactionsMessageResponse) ProtoMessage() {}
 
 func (x *SignTransactionsMessageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dapplink_walletsign_proto_msgTypes[13]
+	mi := &file_dapplink_walletsign_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -871,7 +971,7 @@ func (x *SignTransactionsMessageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignTransactionsMessageResponse.ProtoReflect.Descriptor instead.
 func (*SignTransactionsMessageResponse) Descriptor() ([]byte, []int) {
-	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{13}
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *SignTransactionsMessageResponse) GetCode() common.ReturnCode {
@@ -914,7 +1014,7 @@ type TransactionMessage struct {
 
 func (x *TransactionMessage) Reset() {
 	*x = TransactionMessage{}
-	mi := &file_dapplink_walletsign_proto_msgTypes[14]
+	mi := &file_dapplink_walletsign_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -926,7 +1026,7 @@ func (x *TransactionMessage) String() string {
 func (*TransactionMessage) ProtoMessage() {}
 
 func (x *TransactionMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_dapplink_walletsign_proto_msgTypes[14]
+	mi := &file_dapplink_walletsign_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -939,7 +1039,7 @@ func (x *TransactionMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TransactionMessage.ProtoReflect.Descriptor instead.
 func (*TransactionMessage) Descriptor() ([]byte, []int) {
-	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{14}
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *TransactionMessage) GetPublicKey() string {
@@ -981,7 +1081,7 @@ type TransactionWithSign struct {
 
 func (x *TransactionWithSign) Reset() {
 	*x = TransactionWithSign{}
-	mi := &file_dapplink_walletsign_proto_msgTypes[15]
+	mi := &file_dapplink_walletsign_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -993,7 +1093,7 @@ func (x *TransactionWithSign) String() string {
 func (*TransactionWithSign) ProtoMessage() {}
 
 func (x *TransactionWithSign) ProtoReflect() protoreflect.Message {
-	mi := &file_dapplink_walletsign_proto_msgTypes[15]
+	mi := &file_dapplink_walletsign_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1006,7 +1106,7 @@ func (x *TransactionWithSign) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TransactionWithSign.ProtoReflect.Descriptor instead.
 func (*TransactionWithSign) Descriptor() ([]byte, []int) {
-	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{15}
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *TransactionWithSign) GetTxMessageHash() string {
@@ -1042,7 +1142,7 @@ type BuildAndSignTransactionsRequest struct {
 
 func (x *BuildAndSignTransactionsRequest) Reset() {
 	*x = BuildAndSignTransactionsRequest{}
-	mi := &file_dapplink_walletsign_proto_msgTypes[16]
+	mi := &file_dapplink_walletsign_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1054,7 +1154,7 @@ func (x *BuildAndSignTransactionsRequest) String() string {
 func (*BuildAndSignTransactionsRequest) ProtoMessage() {}
 
 func (x *BuildAndSignTransactionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dapplink_walletsign_proto_msgTypes[16]
+	mi := &file_dapplink_walletsign_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1067,7 +1167,7 @@ func (x *BuildAndSignTransactionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuildAndSignTransactionsRequest.ProtoReflect.Descriptor instead.
 func (*BuildAndSignTransactionsRequest) Descriptor() ([]byte, []int) {
-	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{16}
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *BuildAndSignTransactionsRequest) GetConsumerToken() string {
@@ -1109,7 +1209,7 @@ type BuildAndSignTransactionsResponse struct {
 
 func (x *BuildAndSignTransactionsResponse) Reset() {
 	*x = BuildAndSignTransactionsResponse{}
-	mi := &file_dapplink_walletsign_proto_msgTypes[17]
+	mi := &file_dapplink_walletsign_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1121,7 +1221,7 @@ func (x *BuildAndSignTransactionsResponse) String() string {
 func (*BuildAndSignTransactionsResponse) ProtoMessage() {}
 
 func (x *BuildAndSignTransactionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dapplink_walletsign_proto_msgTypes[17]
+	mi := &file_dapplink_walletsign_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1134,7 +1234,7 @@ func (x *BuildAndSignTransactionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BuildAndSignTransactionsResponse.ProtoReflect.Descriptor instead.
 func (*BuildAndSignTransactionsResponse) Descriptor() ([]byte, []int) {
-	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{17}
+	return file_dapplink_walletsign_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *BuildAndSignTransactionsResponse) GetCode() common.ReturnCode {
@@ -1211,11 +1311,22 @@ const file_dapplink_walletsign_proto_rawDesc = "" +
 	"#CreateKeyPairsWithAddressesResponse\x12(\n" +
 	"\x04code\x18\x01 \x01(\x0e2\x14.dapplink.ReturnCodeR\x04code\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12V\n" +
-	"\x14public_key_addresses\x18\x03 \x03(\v2$.dapplink.ExportPublicKeyWithAddressR\x12publicKeyAddresses\"Z\n" +
+	"\x14public_key_addresses\x18\x03 \x03(\v2$.dapplink.ExportPublicKeyWithAddressR\x12publicKeyAddresses\"\xaf\x01\n" +
+	"\x0fTransactionBody\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12!\n" +
+	"\ffrom_address\x18\x02 \x01(\tR\vfromAddress\x12\x1d\n" +
+	"\n" +
+	"to_address\x18\x03 \x01(\tR\ttoAddress\x12\x16\n" +
+	"\x06amount\x18\x04 \x01(\tR\x06amount\x12#\n" +
+	"\rtoken_address\x18\x05 \x01(\tR\ftokenAddress\"\xda\x01\n" +
 	"\x16SignTransactionMessage\x12\x1d\n" +
 	"\n" +
 	"public_key\x18\x01 \x01(\tR\tpublicKey\x12!\n" +
-	"\fmessage_hash\x18\x02 \x01(\tR\vmessageHash\"\xc0\x01\n" +
+	"\fmessage_hash\x18\x02 \x01(\tR\vmessageHash\x12\"\n" +
+	"\rrisk_key_hash\x18\x03 \x01(\tR\vriskKeyHash\x12&\n" +
+	"\x0fwallet_key_hash\x18\x04 \x01(\tR\rwalletKeyHash\x122\n" +
+	"\atx_body\x18\x05 \x01(\v2\x19.dapplink.TransactionBodyR\x06txBody\"\xc0\x01\n" +
 	"\x1eSignTransactionsMessageRequest\x12%\n" +
 	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\tR\achainId\x12\x18\n" +
@@ -1272,7 +1383,7 @@ func file_dapplink_walletsign_proto_rawDescGZIP() []byte {
 	return file_dapplink_walletsign_proto_rawDescData
 }
 
-var file_dapplink_walletsign_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_dapplink_walletsign_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_dapplink_walletsign_proto_goTypes = []any{
 	(*ChainSignMethodRequest)(nil),                  // 0: dapplink.ChainSignMethodRequest
 	(*ChainSignMethodResponse)(nil),                 // 1: dapplink.ChainSignMethodResponse
@@ -1284,46 +1395,48 @@ var file_dapplink_walletsign_proto_goTypes = []any{
 	(*ExportPublicKeyWithAddress)(nil),              // 7: dapplink.ExportPublicKeyWithAddress
 	(*CreateKeyPairsWithAddressesRequest)(nil),      // 8: dapplink.CreateKeyPairsWithAddressesRequest
 	(*CreateKeyPairsWithAddressesResponse)(nil),     // 9: dapplink.CreateKeyPairsWithAddressesResponse
-	(*SignTransactionMessage)(nil),                  // 10: dapplink.SignTransactionMessage
-	(*SignTransactionsMessageRequest)(nil),          // 11: dapplink.SignTransactionsMessageRequest
-	(*MsgWithSignature)(nil),                        // 12: dapplink.MsgWithSignature
-	(*SignTransactionsMessageResponse)(nil),         // 13: dapplink.SignTransactionsMessageResponse
-	(*TransactionMessage)(nil),                      // 14: dapplink.TransactionMessage
-	(*TransactionWithSign)(nil),                     // 15: dapplink.TransactionWithSign
-	(*BuildAndSignTransactionsRequest)(nil),         // 16: dapplink.BuildAndSignTransactionsRequest
-	(*BuildAndSignTransactionsResponse)(nil),        // 17: dapplink.BuildAndSignTransactionsResponse
-	(common.ReturnCode)(0),                          // 18: dapplink.ReturnCode
+	(*TransactionBody)(nil),                         // 10: dapplink.TransactionBody
+	(*SignTransactionMessage)(nil),                  // 11: dapplink.SignTransactionMessage
+	(*SignTransactionsMessageRequest)(nil),          // 12: dapplink.SignTransactionsMessageRequest
+	(*MsgWithSignature)(nil),                        // 13: dapplink.MsgWithSignature
+	(*SignTransactionsMessageResponse)(nil),         // 14: dapplink.SignTransactionsMessageResponse
+	(*TransactionMessage)(nil),                      // 15: dapplink.TransactionMessage
+	(*TransactionWithSign)(nil),                     // 16: dapplink.TransactionWithSign
+	(*BuildAndSignTransactionsRequest)(nil),         // 17: dapplink.BuildAndSignTransactionsRequest
+	(*BuildAndSignTransactionsResponse)(nil),        // 18: dapplink.BuildAndSignTransactionsResponse
+	(common.ReturnCode)(0),                          // 19: dapplink.ReturnCode
 }
 var file_dapplink_walletsign_proto_depIdxs = []int32{
-	18, // 0: dapplink.ChainSignMethodResponse.code:type_name -> dapplink.ReturnCode
-	18, // 1: dapplink.ChainSchemaResponse.code:type_name -> dapplink.ReturnCode
-	18, // 2: dapplink.CreateKeyPairAndExportPublicKeyResponse.code:type_name -> dapplink.ReturnCode
+	19, // 0: dapplink.ChainSignMethodResponse.code:type_name -> dapplink.ReturnCode
+	19, // 1: dapplink.ChainSchemaResponse.code:type_name -> dapplink.ReturnCode
+	19, // 2: dapplink.CreateKeyPairAndExportPublicKeyResponse.code:type_name -> dapplink.ReturnCode
 	4,  // 3: dapplink.CreateKeyPairAndExportPublicKeyResponse.public_key_list:type_name -> dapplink.ExportPublicKey
-	18, // 4: dapplink.CreateKeyPairsWithAddressesResponse.code:type_name -> dapplink.ReturnCode
+	19, // 4: dapplink.CreateKeyPairsWithAddressesResponse.code:type_name -> dapplink.ReturnCode
 	7,  // 5: dapplink.CreateKeyPairsWithAddressesResponse.public_key_addresses:type_name -> dapplink.ExportPublicKeyWithAddress
-	10, // 6: dapplink.SignTransactionsMessageRequest.sign_txn_msg:type_name -> dapplink.SignTransactionMessage
-	18, // 7: dapplink.SignTransactionsMessageResponse.Code:type_name -> dapplink.ReturnCode
-	12, // 8: dapplink.SignTransactionsMessageResponse.msg_with_signature:type_name -> dapplink.MsgWithSignature
-	14, // 9: dapplink.BuildAndSignTransactionsRequest.tx_msg:type_name -> dapplink.TransactionMessage
-	18, // 10: dapplink.BuildAndSignTransactionsResponse.code:type_name -> dapplink.ReturnCode
-	15, // 11: dapplink.BuildAndSignTransactionsResponse.tx_with_sign:type_name -> dapplink.TransactionWithSign
-	0,  // 12: dapplink.WalletSignService.getChainSignMethod:input_type -> dapplink.ChainSignMethodRequest
-	2,  // 13: dapplink.WalletSignService.getChainSchema:input_type -> dapplink.ChainSchemaRequest
-	5,  // 14: dapplink.WalletSignService.createKeyPairsExportPublicKeyList:input_type -> dapplink.CreateKeyPairAndExportPublicKeyRequest
-	8,  // 15: dapplink.WalletSignService.createKeyPairsWithAddresses:input_type -> dapplink.CreateKeyPairsWithAddressesRequest
-	11, // 16: dapplink.WalletSignService.signTransactionsMessage:input_type -> dapplink.SignTransactionsMessageRequest
-	16, // 17: dapplink.WalletSignService.buildAndSignTransactions:input_type -> dapplink.BuildAndSignTransactionsRequest
-	1,  // 18: dapplink.WalletSignService.getChainSignMethod:output_type -> dapplink.ChainSignMethodResponse
-	3,  // 19: dapplink.WalletSignService.getChainSchema:output_type -> dapplink.ChainSchemaResponse
-	6,  // 20: dapplink.WalletSignService.createKeyPairsExportPublicKeyList:output_type -> dapplink.CreateKeyPairAndExportPublicKeyResponse
-	9,  // 21: dapplink.WalletSignService.createKeyPairsWithAddresses:output_type -> dapplink.CreateKeyPairsWithAddressesResponse
-	13, // 22: dapplink.WalletSignService.signTransactionsMessage:output_type -> dapplink.SignTransactionsMessageResponse
-	17, // 23: dapplink.WalletSignService.buildAndSignTransactions:output_type -> dapplink.BuildAndSignTransactionsResponse
-	18, // [18:24] is the sub-list for method output_type
-	12, // [12:18] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	10, // 6: dapplink.SignTransactionMessage.tx_body:type_name -> dapplink.TransactionBody
+	11, // 7: dapplink.SignTransactionsMessageRequest.sign_txn_msg:type_name -> dapplink.SignTransactionMessage
+	19, // 8: dapplink.SignTransactionsMessageResponse.Code:type_name -> dapplink.ReturnCode
+	13, // 9: dapplink.SignTransactionsMessageResponse.msg_with_signature:type_name -> dapplink.MsgWithSignature
+	15, // 10: dapplink.BuildAndSignTransactionsRequest.tx_msg:type_name -> dapplink.TransactionMessage
+	19, // 11: dapplink.BuildAndSignTransactionsResponse.code:type_name -> dapplink.ReturnCode
+	16, // 12: dapplink.BuildAndSignTransactionsResponse.tx_with_sign:type_name -> dapplink.TransactionWithSign
+	0,  // 13: dapplink.WalletSignService.getChainSignMethod:input_type -> dapplink.ChainSignMethodRequest
+	2,  // 14: dapplink.WalletSignService.getChainSchema:input_type -> dapplink.ChainSchemaRequest
+	5,  // 15: dapplink.WalletSignService.createKeyPairsExportPublicKeyList:input_type -> dapplink.CreateKeyPairAndExportPublicKeyRequest
+	8,  // 16: dapplink.WalletSignService.createKeyPairsWithAddresses:input_type -> dapplink.CreateKeyPairsWithAddressesRequest
+	12, // 17: dapplink.WalletSignService.signTransactionsMessage:input_type -> dapplink.SignTransactionsMessageRequest
+	17, // 18: dapplink.WalletSignService.buildAndSignTransactions:input_type -> dapplink.BuildAndSignTransactionsRequest
+	1,  // 19: dapplink.WalletSignService.getChainSignMethod:output_type -> dapplink.ChainSignMethodResponse
+	3,  // 20: dapplink.WalletSignService.getChainSchema:output_type -> dapplink.ChainSchemaResponse
+	6,  // 21: dapplink.WalletSignService.createKeyPairsExportPublicKeyList:output_type -> dapplink.CreateKeyPairAndExportPublicKeyResponse
+	9,  // 22: dapplink.WalletSignService.createKeyPairsWithAddresses:output_type -> dapplink.CreateKeyPairsWithAddressesResponse
+	14, // 23: dapplink.WalletSignService.signTransactionsMessage:output_type -> dapplink.SignTransactionsMessageResponse
+	18, // 24: dapplink.WalletSignService.buildAndSignTransactions:output_type -> dapplink.BuildAndSignTransactionsResponse
+	19, // [19:25] is the sub-list for method output_type
+	13, // [13:19] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_dapplink_walletsign_proto_init() }
@@ -1337,7 +1450,7 @@ func file_dapplink_walletsign_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dapplink_walletsign_proto_rawDesc), len(file_dapplink_walletsign_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

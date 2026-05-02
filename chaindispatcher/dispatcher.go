@@ -5,9 +5,6 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/dapplink-labs/dapplink-wallet-api/chain/solana"
-	"github.com/dapplink-labs/dapplink-wallet-api/chain/tron"
-	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/common"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,8 +14,11 @@ import (
 	"github.com/dapplink-labs/dapplink-wallet-api/chain"
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/bitcoin"
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/ethereum"
+	"github.com/dapplink-labs/dapplink-wallet-api/chain/solana"
+	"github.com/dapplink-labs/dapplink-wallet-api/chain/tron"
 	"github.com/dapplink-labs/dapplink-wallet-api/config"
-	walletapi "github.com/dapplink-labs/dapplink-wallet-api/protobuf/walletapi"
+	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/common"
+	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/walletapi"
 )
 
 const GrpcToken = "DappLinkTheWeb3"

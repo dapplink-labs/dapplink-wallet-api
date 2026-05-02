@@ -7,9 +7,11 @@
 package notifier
 
 import (
+	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -20,20 +22,360 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type DepositWithdrawInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BlockNumber   uint64                 `protobuf:"varint,1,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	BlockHash     string                 `protobuf:"bytes,2,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"`
+	TxHash        string                 `protobuf:"bytes,3,opt,name=tx_hash,json=txHash,proto3" json:"tx_hash,omitempty"`
+	FromAddress   string                 `protobuf:"bytes,4,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress     string                 `protobuf:"bytes,5,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	Amount        string                 `protobuf:"bytes,6,opt,name=amount,proto3" json:"amount,omitempty"`
+	Fee           string                 `protobuf:"bytes,7,opt,name=fee,proto3" json:"fee,omitempty"`
+	TxType        uint32                 `protobuf:"varint,8,opt,name=tx_type,json=txType,proto3" json:"tx_type,omitempty"`
+	Status        uint32                 `protobuf:"varint,9,opt,name=status,proto3" json:"status,omitempty"`
+	Confirms      uint64                 `protobuf:"varint,10,opt,name=confirms,proto3" json:"confirms,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepositWithdrawInfo) Reset() {
+	*x = DepositWithdrawInfo{}
+	mi := &file_dapplink_notifier_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepositWithdrawInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepositWithdrawInfo) ProtoMessage() {}
+
+func (x *DepositWithdrawInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_notifier_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepositWithdrawInfo.ProtoReflect.Descriptor instead.
+func (*DepositWithdrawInfo) Descriptor() ([]byte, []int) {
+	return file_dapplink_notifier_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *DepositWithdrawInfo) GetBlockNumber() uint64 {
+	if x != nil {
+		return x.BlockNumber
+	}
+	return 0
+}
+
+func (x *DepositWithdrawInfo) GetBlockHash() string {
+	if x != nil {
+		return x.BlockHash
+	}
+	return ""
+}
+
+func (x *DepositWithdrawInfo) GetTxHash() string {
+	if x != nil {
+		return x.TxHash
+	}
+	return ""
+}
+
+func (x *DepositWithdrawInfo) GetFromAddress() string {
+	if x != nil {
+		return x.FromAddress
+	}
+	return ""
+}
+
+func (x *DepositWithdrawInfo) GetToAddress() string {
+	if x != nil {
+		return x.ToAddress
+	}
+	return ""
+}
+
+func (x *DepositWithdrawInfo) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+func (x *DepositWithdrawInfo) GetFee() string {
+	if x != nil {
+		return x.Fee
+	}
+	return ""
+}
+
+func (x *DepositWithdrawInfo) GetTxType() uint32 {
+	if x != nil {
+		return x.TxType
+	}
+	return 0
+}
+
+func (x *DepositWithdrawInfo) GetStatus() uint32 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *DepositWithdrawInfo) GetConfirms() uint64 {
+	if x != nil {
+		return x.Confirms
+	}
+	return 0
+}
+
+type DepositWithdrawNotifyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ConsumerToken string                 `protobuf:"bytes,1,opt,name=consumer_token,json=consumerToken,proto3" json:"consumer_token,omitempty"`
+	DwTxn         []*DepositWithdrawInfo `protobuf:"bytes,2,rep,name=dw_txn,json=dwTxn,proto3" json:"dw_txn,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepositWithdrawNotifyRequest) Reset() {
+	*x = DepositWithdrawNotifyRequest{}
+	mi := &file_dapplink_notifier_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepositWithdrawNotifyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepositWithdrawNotifyRequest) ProtoMessage() {}
+
+func (x *DepositWithdrawNotifyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_notifier_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepositWithdrawNotifyRequest.ProtoReflect.Descriptor instead.
+func (*DepositWithdrawNotifyRequest) Descriptor() ([]byte, []int) {
+	return file_dapplink_notifier_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *DepositWithdrawNotifyRequest) GetConsumerToken() string {
+	if x != nil {
+		return x.ConsumerToken
+	}
+	return ""
+}
+
+func (x *DepositWithdrawNotifyRequest) GetDwTxn() []*DepositWithdrawInfo {
+	if x != nil {
+		return x.DwTxn
+	}
+	return nil
+}
+
+type RetDwNotifyInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BlockNumber   uint64                 `protobuf:"varint,1,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	BlockHash     string                 `protobuf:"bytes,2,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"`
+	TxHash        string                 `protobuf:"bytes,3,opt,name=tx_hash,json=txHash,proto3" json:"tx_hash,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RetDwNotifyInfo) Reset() {
+	*x = RetDwNotifyInfo{}
+	mi := &file_dapplink_notifier_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetDwNotifyInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetDwNotifyInfo) ProtoMessage() {}
+
+func (x *RetDwNotifyInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_notifier_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetDwNotifyInfo.ProtoReflect.Descriptor instead.
+func (*RetDwNotifyInfo) Descriptor() ([]byte, []int) {
+	return file_dapplink_notifier_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *RetDwNotifyInfo) GetBlockNumber() uint64 {
+	if x != nil {
+		return x.BlockNumber
+	}
+	return 0
+}
+
+func (x *RetDwNotifyInfo) GetBlockHash() string {
+	if x != nil {
+		return x.BlockHash
+	}
+	return ""
+}
+
+func (x *RetDwNotifyInfo) GetTxHash() string {
+	if x != nil {
+		return x.TxHash
+	}
+	return ""
+}
+
+type DepositWithdrawNotifyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          common.ReturnCode      `protobuf:"varint,1,opt,name=code,proto3,enum=dapplink.ReturnCode" json:"code,omitempty"`
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	RetDwTxn      []*RetDwNotifyInfo     `protobuf:"bytes,3,rep,name=ret_dw_txn,json=retDwTxn,proto3" json:"ret_dw_txn,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepositWithdrawNotifyResponse) Reset() {
+	*x = DepositWithdrawNotifyResponse{}
+	mi := &file_dapplink_notifier_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepositWithdrawNotifyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepositWithdrawNotifyResponse) ProtoMessage() {}
+
+func (x *DepositWithdrawNotifyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_notifier_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepositWithdrawNotifyResponse.ProtoReflect.Descriptor instead.
+func (*DepositWithdrawNotifyResponse) Descriptor() ([]byte, []int) {
+	return file_dapplink_notifier_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *DepositWithdrawNotifyResponse) GetCode() common.ReturnCode {
+	if x != nil {
+		return x.Code
+	}
+	return common.ReturnCode(0)
+}
+
+func (x *DepositWithdrawNotifyResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *DepositWithdrawNotifyResponse) GetRetDwTxn() []*RetDwNotifyInfo {
+	if x != nil {
+		return x.RetDwTxn
+	}
+	return nil
+}
+
 var File_dapplink_notifier_proto protoreflect.FileDescriptor
 
 const file_dapplink_notifier_proto_rawDesc = "" +
 	"\n" +
-	"\x17dapplink/notifier.proto\x12\bdapplink2\x12\n" +
-	"\x10NotifierServicesB\x16Z\x14../protobuf/notifierb\x06proto3"
+	"\x17dapplink/notifier.proto\x12\bdapplink\x1a\x15dapplink/common.proto\"\xa9\x02\n" +
+	"\x13depositWithdrawInfo\x12!\n" +
+	"\fblock_number\x18\x01 \x01(\x04R\vblockNumber\x12\x1d\n" +
+	"\n" +
+	"block_hash\x18\x02 \x01(\tR\tblockHash\x12\x17\n" +
+	"\atx_hash\x18\x03 \x01(\tR\x06txHash\x12!\n" +
+	"\ffrom_address\x18\x04 \x01(\tR\vfromAddress\x12\x1d\n" +
+	"\n" +
+	"to_address\x18\x05 \x01(\tR\ttoAddress\x12\x16\n" +
+	"\x06amount\x18\x06 \x01(\tR\x06amount\x12\x10\n" +
+	"\x03fee\x18\a \x01(\tR\x03fee\x12\x17\n" +
+	"\atx_type\x18\b \x01(\rR\x06txType\x12\x16\n" +
+	"\x06status\x18\t \x01(\rR\x06status\x12\x1a\n" +
+	"\bconfirms\x18\n" +
+	" \x01(\x04R\bconfirms\"{\n" +
+	"\x1cdepositWithdrawNotifyRequest\x12%\n" +
+	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x124\n" +
+	"\x06dw_txn\x18\x02 \x03(\v2\x1d.dapplink.depositWithdrawInfoR\x05dwTxn\"l\n" +
+	"\x0fRetDwNotifyInfo\x12!\n" +
+	"\fblock_number\x18\x01 \x01(\x04R\vblockNumber\x12\x1d\n" +
+	"\n" +
+	"block_hash\x18\x02 \x01(\tR\tblockHash\x12\x17\n" +
+	"\atx_hash\x18\x03 \x01(\tR\x06txHash\"\x94\x01\n" +
+	"\x1ddepositWithdrawNotifyResponse\x12(\n" +
+	"\x04code\x18\x01 \x01(\x0e2\x14.dapplink.ReturnCodeR\x04code\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x127\n" +
+	"\n" +
+	"ret_dw_txn\x18\x03 \x03(\v2\x19.dapplink.RetDwNotifyInfoR\bretDwTxn2~\n" +
+	"\x10NotifierServices\x12j\n" +
+	"\x15depositWithdrawNotify\x12&.dapplink.depositWithdrawNotifyRequest\x1a'.dapplink.depositWithdrawNotifyResponse\"\x00B\x16Z\x14../protobuf/notifierb\x06proto3"
 
-var file_dapplink_notifier_proto_goTypes = []any{}
+var (
+	file_dapplink_notifier_proto_rawDescOnce sync.Once
+	file_dapplink_notifier_proto_rawDescData []byte
+)
+
+func file_dapplink_notifier_proto_rawDescGZIP() []byte {
+	file_dapplink_notifier_proto_rawDescOnce.Do(func() {
+		file_dapplink_notifier_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_dapplink_notifier_proto_rawDesc), len(file_dapplink_notifier_proto_rawDesc)))
+	})
+	return file_dapplink_notifier_proto_rawDescData
+}
+
+var file_dapplink_notifier_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_dapplink_notifier_proto_goTypes = []any{
+	(*DepositWithdrawInfo)(nil),           // 0: dapplink.depositWithdrawInfo
+	(*DepositWithdrawNotifyRequest)(nil),  // 1: dapplink.depositWithdrawNotifyRequest
+	(*RetDwNotifyInfo)(nil),               // 2: dapplink.RetDwNotifyInfo
+	(*DepositWithdrawNotifyResponse)(nil), // 3: dapplink.depositWithdrawNotifyResponse
+	(common.ReturnCode)(0),                // 4: dapplink.ReturnCode
+}
 var file_dapplink_notifier_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: dapplink.depositWithdrawNotifyRequest.dw_txn:type_name -> dapplink.depositWithdrawInfo
+	4, // 1: dapplink.depositWithdrawNotifyResponse.code:type_name -> dapplink.ReturnCode
+	2, // 2: dapplink.depositWithdrawNotifyResponse.ret_dw_txn:type_name -> dapplink.RetDwNotifyInfo
+	1, // 3: dapplink.NotifierServices.depositWithdrawNotify:input_type -> dapplink.depositWithdrawNotifyRequest
+	3, // 4: dapplink.NotifierServices.depositWithdrawNotify:output_type -> dapplink.depositWithdrawNotifyResponse
+	4, // [4:5] is the sub-list for method output_type
+	3, // [3:4] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_dapplink_notifier_proto_init() }
@@ -47,12 +389,13 @@ func file_dapplink_notifier_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dapplink_notifier_proto_rawDesc), len(file_dapplink_notifier_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   0,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_dapplink_notifier_proto_goTypes,
 		DependencyIndexes: file_dapplink_notifier_proto_depIdxs,
+		MessageInfos:      file_dapplink_notifier_proto_msgTypes,
 	}.Build()
 	File_dapplink_notifier_proto = out.File
 	file_dapplink_notifier_proto_goTypes = nil

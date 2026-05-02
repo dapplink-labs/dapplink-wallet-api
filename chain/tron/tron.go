@@ -94,7 +94,7 @@ func (c *ChainAdaptor) ValidAddresses(ctx context.Context, req *walletapi.ValidA
 }
 
 func (c *ChainAdaptor) GetLastestBlock(ctx context.Context, req *walletapi.LastestBlockRequest) (*walletapi.LastestBlockResponse, error) {
-	blockResp, err := c.tronClient.GetBlockByNumber("latest")
+	blockResp, err := c.tronClient.GetLatestBlock()
 	if err != nil {
 		log.Error("get latest block fail", "err", err)
 		return &walletapi.LastestBlockResponse{
@@ -102,11 +102,13 @@ func (c *ChainAdaptor) GetLastestBlock(ctx context.Context, req *walletapi.Laste
 			Msg:  err.Error(),
 		}, err
 	}
-
 	return &walletapi.LastestBlockResponse{
-		Code:   common.ReturnCode_SUCCESS,
-		Msg:    "success",
-		Height: uint64(blockResp.BlockHeader.RawData.Number),
+		Code:       common.ReturnCode_SUCCESS,
+		Msg:        "success",
+		Height:     uint64(blockResp.BlockHeader.RawData.Number),
+		Hash:       blockResp.BlockID,
+		ParentHash: blockResp.BlockHeader.RawData.ParentHash,
+		Timestamp:  uint64(blockResp.BlockHeader.RawData.Timestamp),
 	}, nil
 }
 
@@ -119,7 +121,6 @@ func (c *ChainAdaptor) GetBlock(ctx context.Context, req *walletapi.BlockRequest
 			Msg:  err.Error(),
 		}, err
 	}
-
 	var txList []*walletapi.TransactionList
 	if blockResp.Transactions != nil {
 		for _, tx := range blockResp.Transactions {
@@ -128,7 +129,6 @@ func (c *ChainAdaptor) GetBlock(ctx context.Context, req *walletapi.BlockRequest
 			})
 		}
 	}
-
 	return &walletapi.BlockResponse{
 		Code:         common.ReturnCode_SUCCESS,
 		Msg:          "success",
@@ -147,15 +147,12 @@ func (c *ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.
 			Msg:  err.Error(),
 		}, err
 	}
-
 	var fromAddrs []*walletapi.FromAddress
 	var toAddrs []*walletapi.ToAddress
 	var contractAddress string
 	var txType uint32
-
 	if len(tx.RawData.Contract) > 0 {
 		contract := tx.RawData.Contract[0]
-
 		switch contract.Type {
 		case "TransferContract":
 			txType = 1 // Native TRX transfer
@@ -173,7 +170,6 @@ func (c *ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.
 					Amount:  strconv.FormatInt(contract.Parameter.Value.Amount, 10),
 				})
 			}
-
 		case "TriggerSmartContract":
 			txType = 2 // TRC20 Token transfer
 			if contract.Parameter.Value.ContractAddress != "" {
@@ -205,7 +201,6 @@ func (c *ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.
 			}
 		}
 	}
-
 	return &walletapi.TransactionByHashResponse{
 		Code: common.ReturnCode_SUCCESS,
 		Msg:  "success",
@@ -222,12 +217,9 @@ func (c *ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.
 func (c *ChainAdaptor) GetTransactionByAddress(ctx context.Context, req *walletapi.TransactionByAddressRequest) (*walletapi.TransactionByAddressResponse, error) {
 	page := int(req.Page)
 	pageSize := int(req.PageSize)
-
 	if pageSize == 0 {
 		pageSize = 10
 	}
-
-	// Use TronData client to get transactions by address
 	txs, err := c.tronDataClient.GetTransactionsByAddress(req.Address, page, pageSize)
 	if err != nil {
 		log.Error("get transactions for address fail", "err", err)
@@ -236,14 +228,12 @@ func (c *ChainAdaptor) GetTransactionByAddress(ctx context.Context, req *walleta
 			Msg:  err.Error(),
 		}, err
 	}
-
 	var txList []*walletapi.TransactionList
 	for _, tx := range txs {
 		txList = append(txList, &walletapi.TransactionList{
 			TxHash: tx.TxID,
 		})
 	}
-
 	return &walletapi.TransactionByAddressResponse{
 		Code:        common.ReturnCode_SUCCESS,
 		Msg:         "success",
@@ -253,7 +243,6 @@ func (c *ChainAdaptor) GetTransactionByAddress(ctx context.Context, req *walleta
 
 func (c *ChainAdaptor) GetAccountBalance(ctx context.Context, req *walletapi.AccountBalanceRequest) (*walletapi.AccountBalanceResponse, error) {
 	if req.ContractAddress == "" {
-		// Native TRX balance
 		account, err := c.tronClient.GetBalance(req.Address)
 		if err != nil {
 			log.Error("get account fail", "err", err)
@@ -262,15 +251,12 @@ func (c *ChainAdaptor) GetAccountBalance(ctx context.Context, req *walletapi.Acc
 				Msg:  err.Error(),
 			}, err
 		}
-
 		return &walletapi.AccountBalanceResponse{
 			Code:    common.ReturnCode_SUCCESS,
 			Msg:     "success",
 			Balance: strconv.FormatInt(account.Balance, 10),
 		}, nil
 	} else {
-		// TRC20 Token balance - use TronData API or implement TRC20 balance query
-		// For now, return error as TRC20 balance query needs to be implemented
 		return &walletapi.AccountBalanceResponse{
 			Code: common.ReturnCode_ERROR,
 			Msg:  "TRC20 balance query not implemented yet",
@@ -280,15 +266,11 @@ func (c *ChainAdaptor) GetAccountBalance(ctx context.Context, req *walletapi.Acc
 
 func (c *ChainAdaptor) SendTransaction(ctx context.Context, req *walletapi.SendTransactionsRequest) (*walletapi.SendTransactionResponse, error) {
 	var txnRetList []*walletapi.RawTransactionReturn
-
 	for _, rawTx := range req.RawTx {
-		// Broadcast the signed transaction
-		// For now, return a placeholder as we need to implement the broadcast method
 		txnRetList = append(txnRetList, &walletapi.RawTransactionReturn{
 			TxHash: rawTx.RawTx,
 		})
 	}
-
 	return &walletapi.SendTransactionResponse{
 		Code:   common.ReturnCode_SUCCESS,
 		Msg:    "success",
@@ -305,15 +287,11 @@ func (c *ChainAdaptor) BuildTransactionSchema(ctx context.Context, request *wall
 
 func (c *ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *walletapi.UnSignTransactionRequest) (*walletapi.UnSignTransactionResponse, error) {
 	var unsignedTxList []*walletapi.UnsignedTransactionMessageHash
-
 	for _, base64Tx := range request.Base64Txn {
-		// Decode the base64 transaction to get transaction parameters
-		// For now, return a placeholder as the actual implementation depends on the transaction format
 		unsignedTxList = append(unsignedTxList, &walletapi.UnsignedTransactionMessageHash{
 			UnsignedTx: base64Tx.Base64Tx,
 		})
 	}
-
 	return &walletapi.UnSignTransactionResponse{
 		Code:        common.ReturnCode_SUCCESS,
 		Msg:         "success",
@@ -323,16 +301,12 @@ func (c *ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *wall
 
 func (c *ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *walletapi.SignedTransactionRequest) (*walletapi.SignedTransactionResponse, error) {
 	var signedTxList []*walletapi.SignedTxWithHash
-
 	for _, txWithSig := range request.TxnWithSignature {
-		// Process each transaction with signature
-		// For now, return a placeholder as the actual implementation depends on the transaction format
 		signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
 			SignedTx: txWithSig.Base64Tx,
-			TxHash:   "", // Will be computed from the signed transaction
+			TxHash:   "",
 		})
 	}
-
 	return &walletapi.SignedTransactionResponse{
 		Code:      common.ReturnCode_SUCCESS,
 		Msg:       "success",

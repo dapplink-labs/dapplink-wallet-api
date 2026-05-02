@@ -7,7 +7,10 @@
 package notifier
 
 import (
+	context "context"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -15,12 +18,15 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-const ()
+const (
+	NotifierServices_DepositWithdrawNotify_FullMethodName = "/dapplink.NotifierServices/depositWithdrawNotify"
+)
 
 // NotifierServicesClient is the client API for NotifierServices service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NotifierServicesClient interface {
+	DepositWithdrawNotify(ctx context.Context, in *DepositWithdrawNotifyRequest, opts ...grpc.CallOption) (*DepositWithdrawNotifyResponse, error)
 }
 
 type notifierServicesClient struct {
@@ -31,14 +37,28 @@ func NewNotifierServicesClient(cc grpc.ClientConnInterface) NotifierServicesClie
 	return &notifierServicesClient{cc}
 }
 
+func (c *notifierServicesClient) DepositWithdrawNotify(ctx context.Context, in *DepositWithdrawNotifyRequest, opts ...grpc.CallOption) (*DepositWithdrawNotifyResponse, error) {
+	out := new(DepositWithdrawNotifyResponse)
+	err := c.cc.Invoke(ctx, NotifierServices_DepositWithdrawNotify_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NotifierServicesServer is the server API for NotifierServices service.
 // All implementations should embed UnimplementedNotifierServicesServer
 // for forward compatibility
 type NotifierServicesServer interface {
+	DepositWithdrawNotify(context.Context, *DepositWithdrawNotifyRequest) (*DepositWithdrawNotifyResponse, error)
 }
 
 // UnimplementedNotifierServicesServer should be embedded to have forward compatible implementations.
 type UnimplementedNotifierServicesServer struct {
+}
+
+func (UnimplementedNotifierServicesServer) DepositWithdrawNotify(context.Context, *DepositWithdrawNotifyRequest) (*DepositWithdrawNotifyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositWithdrawNotify not implemented")
 }
 
 // UnsafeNotifierServicesServer may be embedded to opt out of forward compatibility for this service.
@@ -52,13 +72,36 @@ func RegisterNotifierServicesServer(s grpc.ServiceRegistrar, srv NotifierService
 	s.RegisterService(&NotifierServices_ServiceDesc, srv)
 }
 
+func _NotifierServices_DepositWithdrawNotify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DepositWithdrawNotifyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotifierServicesServer).DepositWithdrawNotify(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotifierServices_DepositWithdrawNotify_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotifierServicesServer).DepositWithdrawNotify(ctx, req.(*DepositWithdrawNotifyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NotifierServices_ServiceDesc is the grpc.ServiceDesc for NotifierServices service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var NotifierServices_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "dapplink.NotifierServices",
 	HandlerType: (*NotifierServicesServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "dapplink/notifier.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "depositWithdrawNotify",
+			Handler:    _NotifierServices_DepositWithdrawNotify_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "dapplink/notifier.proto",
 }

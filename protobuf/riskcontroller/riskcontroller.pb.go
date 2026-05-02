@@ -7,9 +7,11 @@
 package riskcontroller
 
 import (
+	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -20,20 +22,805 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type AmlAddress struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Address       string                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AmlAddress) Reset() {
+	*x = AmlAddress{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AmlAddress) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AmlAddress) ProtoMessage() {}
+
+func (x *AmlAddress) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AmlAddress.ProtoReflect.Descriptor instead.
+func (*AmlAddress) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *AmlAddress) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+type RetAmlAddress struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Address       string                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	AddressType   string                 `protobuf:"bytes,2,opt,name=address_type,json=addressType,proto3" json:"address_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RetAmlAddress) Reset() {
+	*x = RetAmlAddress{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetAmlAddress) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetAmlAddress) ProtoMessage() {}
+
+func (x *RetAmlAddress) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetAmlAddress.ProtoReflect.Descriptor instead.
+func (*RetAmlAddress) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *RetAmlAddress) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *RetAmlAddress) GetAddressType() string {
+	if x != nil {
+		return x.AddressType
+	}
+	return ""
+}
+
+type CheckAmlAddressRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ConsumerToken string                 `protobuf:"bytes,1,opt,name=consumer_token,json=consumerToken,proto3" json:"consumer_token,omitempty"`
+	AmlAddress    []*AmlAddress          `protobuf:"bytes,2,rep,name=aml_address,json=amlAddress,proto3" json:"aml_address,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckAmlAddressRequest) Reset() {
+	*x = CheckAmlAddressRequest{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckAmlAddressRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckAmlAddressRequest) ProtoMessage() {}
+
+func (x *CheckAmlAddressRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckAmlAddressRequest.ProtoReflect.Descriptor instead.
+func (*CheckAmlAddressRequest) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CheckAmlAddressRequest) GetConsumerToken() string {
+	if x != nil {
+		return x.ConsumerToken
+	}
+	return ""
+}
+
+func (x *CheckAmlAddressRequest) GetAmlAddress() []*AmlAddress {
+	if x != nil {
+		return x.AmlAddress
+	}
+	return nil
+}
+
+type CheckAmlAddressResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          common.ReturnCode      `protobuf:"varint,1,opt,name=code,proto3,enum=dapplink.ReturnCode" json:"code,omitempty"`
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	RetAmlAddress []*RetAmlAddress       `protobuf:"bytes,3,rep,name=ret_aml_address,json=retAmlAddress,proto3" json:"ret_aml_address,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckAmlAddressResponse) Reset() {
+	*x = CheckAmlAddressResponse{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckAmlAddressResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckAmlAddressResponse) ProtoMessage() {}
+
+func (x *CheckAmlAddressResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckAmlAddressResponse.ProtoReflect.Descriptor instead.
+func (*CheckAmlAddressResponse) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CheckAmlAddressResponse) GetCode() common.ReturnCode {
+	if x != nil {
+		return x.Code
+	}
+	return common.ReturnCode(0)
+}
+
+func (x *CheckAmlAddressResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *CheckAmlAddressResponse) GetRetAmlAddress() []*RetAmlAddress {
+	if x != nil {
+		return x.RetAmlAddress
+	}
+	return nil
+}
+
+type ChainTransaction struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TxHash        string                 `protobuf:"bytes,1,opt,name=tx_hash,json=txHash,proto3" json:"tx_hash,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChainTransaction) Reset() {
+	*x = ChainTransaction{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChainTransaction) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChainTransaction) ProtoMessage() {}
+
+func (x *ChainTransaction) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChainTransaction.ProtoReflect.Descriptor instead.
+func (*ChainTransaction) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ChainTransaction) GetTxHash() string {
+	if x != nil {
+		return x.TxHash
+	}
+	return ""
+}
+
+type RetChainTransaction struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FromAddress   string                 `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress     string                 `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	Amount        string                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Fee           string                 `protobuf:"bytes,4,opt,name=fee,proto3" json:"fee,omitempty"`
+	Confirms      uint64                 `protobuf:"varint,5,opt,name=confirms,proto3" json:"confirms,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RetChainTransaction) Reset() {
+	*x = RetChainTransaction{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetChainTransaction) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetChainTransaction) ProtoMessage() {}
+
+func (x *RetChainTransaction) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetChainTransaction.ProtoReflect.Descriptor instead.
+func (*RetChainTransaction) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RetChainTransaction) GetFromAddress() string {
+	if x != nil {
+		return x.FromAddress
+	}
+	return ""
+}
+
+func (x *RetChainTransaction) GetToAddress() string {
+	if x != nil {
+		return x.ToAddress
+	}
+	return ""
+}
+
+func (x *RetChainTransaction) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+func (x *RetChainTransaction) GetFee() string {
+	if x != nil {
+		return x.Fee
+	}
+	return ""
+}
+
+func (x *RetChainTransaction) GetConfirms() uint64 {
+	if x != nil {
+		return x.Confirms
+	}
+	return 0
+}
+
+type CheckChainTransactionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ConsumerToken string                 `protobuf:"bytes,1,opt,name=consumer_token,json=consumerToken,proto3" json:"consumer_token,omitempty"`
+	ChainTxn      []*ChainTransaction    `protobuf:"bytes,2,rep,name=chain_txn,json=chainTxn,proto3" json:"chain_txn,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckChainTransactionsRequest) Reset() {
+	*x = CheckChainTransactionsRequest{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckChainTransactionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckChainTransactionsRequest) ProtoMessage() {}
+
+func (x *CheckChainTransactionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckChainTransactionsRequest.ProtoReflect.Descriptor instead.
+func (*CheckChainTransactionsRequest) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CheckChainTransactionsRequest) GetConsumerToken() string {
+	if x != nil {
+		return x.ConsumerToken
+	}
+	return ""
+}
+
+func (x *CheckChainTransactionsRequest) GetChainTxn() []*ChainTransaction {
+	if x != nil {
+		return x.ChainTxn
+	}
+	return nil
+}
+
+type CheckChainTransactionsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          common.ReturnCode      `protobuf:"varint,1,opt,name=code,proto3,enum=dapplink.ReturnCode" json:"code,omitempty"`
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	RetChainTxn   []*RetChainTransaction `protobuf:"bytes,3,rep,name=ret_chain_txn,json=retChainTxn,proto3" json:"ret_chain_txn,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckChainTransactionsResponse) Reset() {
+	*x = CheckChainTransactionsResponse{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckChainTransactionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckChainTransactionsResponse) ProtoMessage() {}
+
+func (x *CheckChainTransactionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckChainTransactionsResponse.ProtoReflect.Descriptor instead.
+func (*CheckChainTransactionsResponse) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *CheckChainTransactionsResponse) GetCode() common.ReturnCode {
+	if x != nil {
+		return x.Code
+	}
+	return common.ReturnCode(0)
+}
+
+func (x *CheckChainTransactionsResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *CheckChainTransactionsResponse) GetRetChainTxn() []*RetChainTransaction {
+	if x != nil {
+		return x.RetChainTxn
+	}
+	return nil
+}
+
+type UserTransaction struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestId     string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	FromAddress   string                 `protobuf:"bytes,2,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
+	ToAddress     string                 `protobuf:"bytes,3,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
+	Amount        string                 `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	TokenAddress  string                 `protobuf:"bytes,5,opt,name=token_address,json=tokenAddress,proto3" json:"token_address,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserTransaction) Reset() {
+	*x = UserTransaction{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserTransaction) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserTransaction) ProtoMessage() {}
+
+func (x *UserTransaction) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserTransaction.ProtoReflect.Descriptor instead.
+func (*UserTransaction) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UserTransaction) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *UserTransaction) GetFromAddress() string {
+	if x != nil {
+		return x.FromAddress
+	}
+	return ""
+}
+
+func (x *UserTransaction) GetToAddress() string {
+	if x != nil {
+		return x.ToAddress
+	}
+	return ""
+}
+
+func (x *UserTransaction) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+func (x *UserTransaction) GetTokenAddress() string {
+	if x != nil {
+		return x.TokenAddress
+	}
+	return ""
+}
+
+type CheckUserTransactionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ConsumerToken string                 `protobuf:"bytes,1,opt,name=consumer_token,json=consumerToken,proto3" json:"consumer_token,omitempty"`
+	UserTxn       []*UserTransaction     `protobuf:"bytes,2,rep,name=user_txn,json=userTxn,proto3" json:"user_txn,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckUserTransactionRequest) Reset() {
+	*x = CheckUserTransactionRequest{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckUserTransactionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckUserTransactionRequest) ProtoMessage() {}
+
+func (x *CheckUserTransactionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckUserTransactionRequest.ProtoReflect.Descriptor instead.
+func (*CheckUserTransactionRequest) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CheckUserTransactionRequest) GetConsumerToken() string {
+	if x != nil {
+		return x.ConsumerToken
+	}
+	return ""
+}
+
+func (x *CheckUserTransactionRequest) GetUserTxn() []*UserTransaction {
+	if x != nil {
+		return x.UserTxn
+	}
+	return nil
+}
+
+type RetUserTransaction struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	RequestId      string                 `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	TxBodyHash     string                 `protobuf:"bytes,2,opt,name=tx_body_hash,json=txBodyHash,proto3" json:"tx_body_hash,omitempty"`
+	TxBodyRiskHash string                 `protobuf:"bytes,3,opt,name=tx_body_risk_hash,json=txBodyRiskHash,proto3" json:"tx_body_risk_hash,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *RetUserTransaction) Reset() {
+	*x = RetUserTransaction{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetUserTransaction) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetUserTransaction) ProtoMessage() {}
+
+func (x *RetUserTransaction) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetUserTransaction.ProtoReflect.Descriptor instead.
+func (*RetUserTransaction) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RetUserTransaction) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *RetUserTransaction) GetTxBodyHash() string {
+	if x != nil {
+		return x.TxBodyHash
+	}
+	return ""
+}
+
+func (x *RetUserTransaction) GetTxBodyRiskHash() string {
+	if x != nil {
+		return x.TxBodyRiskHash
+	}
+	return ""
+}
+
+type CheckUserTransactionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          common.ReturnCode      `protobuf:"varint,1,opt,name=code,proto3,enum=dapplink.ReturnCode" json:"code,omitempty"`
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	RetUserTxn    []*RetUserTransaction  `protobuf:"bytes,3,rep,name=ret_user_txn,json=retUserTxn,proto3" json:"ret_user_txn,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckUserTransactionResponse) Reset() {
+	*x = CheckUserTransactionResponse{}
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckUserTransactionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckUserTransactionResponse) ProtoMessage() {}
+
+func (x *CheckUserTransactionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_riskcontroller_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckUserTransactionResponse.ProtoReflect.Descriptor instead.
+func (*CheckUserTransactionResponse) Descriptor() ([]byte, []int) {
+	return file_dapplink_riskcontroller_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *CheckUserTransactionResponse) GetCode() common.ReturnCode {
+	if x != nil {
+		return x.Code
+	}
+	return common.ReturnCode(0)
+}
+
+func (x *CheckUserTransactionResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *CheckUserTransactionResponse) GetRetUserTxn() []*RetUserTransaction {
+	if x != nil {
+		return x.RetUserTxn
+	}
+	return nil
+}
+
 var File_dapplink_riskcontroller_proto protoreflect.FileDescriptor
 
 const file_dapplink_riskcontroller_proto_rawDesc = "" +
 	"\n" +
-	"\x1ddapplink/riskcontroller.proto\x12\bdapplink2\x18\n" +
-	"\x16RiskControllerServicesB\x1cZ\x1a../protobuf/riskcontrollerb\x06proto3"
+	"\x1ddapplink/riskcontroller.proto\x12\bdapplink\x1a\x15dapplink/common.proto\"&\n" +
+	"\n" +
+	"AmlAddress\x12\x18\n" +
+	"\aaddress\x18\x01 \x01(\tR\aaddress\"L\n" +
+	"\rRetAmlAddress\x12\x18\n" +
+	"\aaddress\x18\x01 \x01(\tR\aaddress\x12!\n" +
+	"\faddress_type\x18\x02 \x01(\tR\vaddressType\"v\n" +
+	"\x16CheckAmlAddressRequest\x12%\n" +
+	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x125\n" +
+	"\vaml_address\x18\x02 \x03(\v2\x14.dapplink.AmlAddressR\n" +
+	"amlAddress\"\x96\x01\n" +
+	"\x17CheckAmlAddressResponse\x12(\n" +
+	"\x04code\x18\x01 \x01(\x0e2\x14.dapplink.ReturnCodeR\x04code\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x12?\n" +
+	"\x0fret_aml_address\x18\x03 \x03(\v2\x17.dapplink.RetAmlAddressR\rretAmlAddress\"+\n" +
+	"\x10ChainTransaction\x12\x17\n" +
+	"\atx_hash\x18\x01 \x01(\tR\x06txHash\"\x9d\x01\n" +
+	"\x13RetChainTransaction\x12!\n" +
+	"\ffrom_address\x18\x01 \x01(\tR\vfromAddress\x12\x1d\n" +
+	"\n" +
+	"to_address\x18\x02 \x01(\tR\ttoAddress\x12\x16\n" +
+	"\x06amount\x18\x03 \x01(\tR\x06amount\x12\x10\n" +
+	"\x03fee\x18\x04 \x01(\tR\x03fee\x12\x1a\n" +
+	"\bconfirms\x18\x05 \x01(\x04R\bconfirms\"\x7f\n" +
+	"\x1dCheckChainTransactionsRequest\x12%\n" +
+	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x127\n" +
+	"\tchain_txn\x18\x02 \x03(\v2\x1a.dapplink.ChainTransactionR\bchainTxn\"\x9f\x01\n" +
+	"\x1eCheckChainTransactionsResponse\x12(\n" +
+	"\x04code\x18\x01 \x01(\x0e2\x14.dapplink.ReturnCodeR\x04code\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x12A\n" +
+	"\rret_chain_txn\x18\x03 \x03(\v2\x1d.dapplink.RetChainTransactionR\vretChainTxn\"\xaf\x01\n" +
+	"\x0fUserTransaction\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12!\n" +
+	"\ffrom_address\x18\x02 \x01(\tR\vfromAddress\x12\x1d\n" +
+	"\n" +
+	"to_address\x18\x03 \x01(\tR\ttoAddress\x12\x16\n" +
+	"\x06amount\x18\x04 \x01(\tR\x06amount\x12#\n" +
+	"\rtoken_address\x18\x05 \x01(\tR\ftokenAddress\"z\n" +
+	"\x1bcheckUserTransactionRequest\x12%\n" +
+	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x124\n" +
+	"\buser_txn\x18\x02 \x03(\v2\x19.dapplink.UserTransactionR\auserTxn\"\x80\x01\n" +
+	"\x12RetUserTransaction\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x01 \x01(\tR\trequestId\x12 \n" +
+	"\ftx_body_hash\x18\x02 \x01(\tR\n" +
+	"txBodyHash\x12)\n" +
+	"\x11tx_body_risk_hash\x18\x03 \x01(\tR\x0etxBodyRiskHash\"\x9a\x01\n" +
+	"\x1ccheckUserTransactionResponse\x12(\n" +
+	"\x04code\x18\x01 \x01(\x0e2\x14.dapplink.ReturnCodeR\x04code\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x12>\n" +
+	"\fret_user_txn\x18\x03 \x03(\v2\x1c.dapplink.RetUserTransactionR\n" +
+	"retUserTxn2\xca\x02\n" +
+	"\x16RiskControllerServices\x12X\n" +
+	"\x0fcheckAmlAddress\x12 .dapplink.CheckAmlAddressRequest\x1a!.dapplink.CheckAmlAddressResponse\"\x00\x12m\n" +
+	"\x16checkChainTransactions\x12'.dapplink.CheckChainTransactionsRequest\x1a(.dapplink.CheckChainTransactionsResponse\"\x00\x12g\n" +
+	"\x14checkUserTransaction\x12%.dapplink.checkUserTransactionRequest\x1a&.dapplink.checkUserTransactionResponse\"\x00B\x1cZ\x1a../protobuf/riskcontrollerb\x06proto3"
 
-var file_dapplink_riskcontroller_proto_goTypes = []any{}
+var (
+	file_dapplink_riskcontroller_proto_rawDescOnce sync.Once
+	file_dapplink_riskcontroller_proto_rawDescData []byte
+)
+
+func file_dapplink_riskcontroller_proto_rawDescGZIP() []byte {
+	file_dapplink_riskcontroller_proto_rawDescOnce.Do(func() {
+		file_dapplink_riskcontroller_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_dapplink_riskcontroller_proto_rawDesc), len(file_dapplink_riskcontroller_proto_rawDesc)))
+	})
+	return file_dapplink_riskcontroller_proto_rawDescData
+}
+
+var file_dapplink_riskcontroller_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_dapplink_riskcontroller_proto_goTypes = []any{
+	(*AmlAddress)(nil),                     // 0: dapplink.AmlAddress
+	(*RetAmlAddress)(nil),                  // 1: dapplink.RetAmlAddress
+	(*CheckAmlAddressRequest)(nil),         // 2: dapplink.CheckAmlAddressRequest
+	(*CheckAmlAddressResponse)(nil),        // 3: dapplink.CheckAmlAddressResponse
+	(*ChainTransaction)(nil),               // 4: dapplink.ChainTransaction
+	(*RetChainTransaction)(nil),            // 5: dapplink.RetChainTransaction
+	(*CheckChainTransactionsRequest)(nil),  // 6: dapplink.CheckChainTransactionsRequest
+	(*CheckChainTransactionsResponse)(nil), // 7: dapplink.CheckChainTransactionsResponse
+	(*UserTransaction)(nil),                // 8: dapplink.UserTransaction
+	(*CheckUserTransactionRequest)(nil),    // 9: dapplink.checkUserTransactionRequest
+	(*RetUserTransaction)(nil),             // 10: dapplink.RetUserTransaction
+	(*CheckUserTransactionResponse)(nil),   // 11: dapplink.checkUserTransactionResponse
+	(common.ReturnCode)(0),                 // 12: dapplink.ReturnCode
+}
 var file_dapplink_riskcontroller_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: dapplink.CheckAmlAddressRequest.aml_address:type_name -> dapplink.AmlAddress
+	12, // 1: dapplink.CheckAmlAddressResponse.code:type_name -> dapplink.ReturnCode
+	1,  // 2: dapplink.CheckAmlAddressResponse.ret_aml_address:type_name -> dapplink.RetAmlAddress
+	4,  // 3: dapplink.CheckChainTransactionsRequest.chain_txn:type_name -> dapplink.ChainTransaction
+	12, // 4: dapplink.CheckChainTransactionsResponse.code:type_name -> dapplink.ReturnCode
+	5,  // 5: dapplink.CheckChainTransactionsResponse.ret_chain_txn:type_name -> dapplink.RetChainTransaction
+	8,  // 6: dapplink.checkUserTransactionRequest.user_txn:type_name -> dapplink.UserTransaction
+	12, // 7: dapplink.checkUserTransactionResponse.code:type_name -> dapplink.ReturnCode
+	10, // 8: dapplink.checkUserTransactionResponse.ret_user_txn:type_name -> dapplink.RetUserTransaction
+	2,  // 9: dapplink.RiskControllerServices.checkAmlAddress:input_type -> dapplink.CheckAmlAddressRequest
+	6,  // 10: dapplink.RiskControllerServices.checkChainTransactions:input_type -> dapplink.CheckChainTransactionsRequest
+	9,  // 11: dapplink.RiskControllerServices.checkUserTransaction:input_type -> dapplink.checkUserTransactionRequest
+	3,  // 12: dapplink.RiskControllerServices.checkAmlAddress:output_type -> dapplink.CheckAmlAddressResponse
+	7,  // 13: dapplink.RiskControllerServices.checkChainTransactions:output_type -> dapplink.CheckChainTransactionsResponse
+	11, // 14: dapplink.RiskControllerServices.checkUserTransaction:output_type -> dapplink.checkUserTransactionResponse
+	12, // [12:15] is the sub-list for method output_type
+	9,  // [9:12] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_dapplink_riskcontroller_proto_init() }
@@ -47,12 +834,13 @@ func file_dapplink_riskcontroller_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dapplink_riskcontroller_proto_rawDesc), len(file_dapplink_riskcontroller_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   0,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_dapplink_riskcontroller_proto_goTypes,
 		DependencyIndexes: file_dapplink_riskcontroller_proto_depIdxs,
+		MessageInfos:      file_dapplink_riskcontroller_proto_msgTypes,
 	}.Build()
 	File_dapplink_riskcontroller_proto = out.File
 	file_dapplink_riskcontroller_proto_goTypes = nil

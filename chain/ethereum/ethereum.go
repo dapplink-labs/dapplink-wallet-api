@@ -29,7 +29,11 @@ import (
 )
 
 const (
-	ChainID string = "DappLinkEthereum"
+	ChainID              string = "DappLinkEthereum"
+	NativeTokenGasLimit  uint64 = 21000
+	Erc20TokenGasLimit   uint64 = 120000
+	MaxFeePerGas         int64  = 105000000000
+	MaxPriorityFeePerGas int64  = 75000000000
 )
 
 type ChainAdaptor struct {
@@ -107,10 +111,12 @@ func (c ChainAdaptor) GetLastestBlock(ctx context.Context, req *walletapi.Lastes
 		return nil, err
 	}
 	return &walletapi.LastestBlockResponse{
-		Code:   common2.ReturnCode_SUCCESS,
-		Msg:    "get lastest block success",
-		Hash:   latestBock.Hash().String(),
-		Height: latestBock.Number.Uint64(),
+		Code:       common2.ReturnCode_SUCCESS,
+		Msg:        "get lastest block success",
+		Hash:       latestBock.Hash().String(),
+		Height:     latestBock.Number.Uint64(),
+		ParentHash: hex.EncodeToString(latestBock.ParentHash[:]),
+		Timestamp:  latestBock.Time,
 	}, nil
 }
 
@@ -418,7 +424,6 @@ func (c ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *walle
 		log.Info("ethereum BuildSignedTransaction", "dynamicFeeTx", util.ToJSONString(dynamicFeeTx))
 		log.Info("ethereum BuildSignedTransaction", "req.Signature", txWithSignature.Signature)
 
-		// Decode signature and create signed transaction
 		inputSignatureByteList, err := hex.DecodeString(txWithSignature.Signature)
 		if err != nil {
 			log.Error("decode signature failed", "err", err)
@@ -470,34 +475,23 @@ func (c ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *walle
 }
 
 func (c *ChainAdaptor) buildDynamicFeeTx(base64Tx string) (*types.DynamicFeeTx, *evmbase.Eip1559DynamicFeeTx, error) {
-	// 1. Decode base64 string
 	txReqJsonByte, err := base64.StdEncoding.DecodeString(base64Tx)
 	if err != nil {
 		log.Error("decode string fail", "err", err)
 		return nil, nil, err
 	}
 
-	// 2. Unmarshal JSON to struct
 	var dynamicFeeTx evmbase.Eip1559DynamicFeeTx
 	if err := json.Unmarshal(txReqJsonByte, &dynamicFeeTx); err != nil {
 		log.Error("parse json fail", "err", err)
 		return nil, nil, err
 	}
 
-	// 3. Convert string values to big.Int
 	chainID := new(big.Int)
-	maxPriorityFeePerGas := new(big.Int)
-	maxFeePerGas := new(big.Int)
 	amount := new(big.Int)
 
 	if _, ok := chainID.SetString(dynamicFeeTx.ChainId, 10); !ok {
 		return nil, nil, fmt.Errorf("invalid chain ID: %s", dynamicFeeTx.ChainId)
-	}
-	if _, ok := maxPriorityFeePerGas.SetString(dynamicFeeTx.MaxPriorityFeePerGas, 10); !ok {
-		return nil, nil, fmt.Errorf("invalid max priority fee: %s", dynamicFeeTx.MaxPriorityFeePerGas)
-	}
-	if _, ok := maxFeePerGas.SetString(dynamicFeeTx.MaxFeePerGas, 10); !ok {
-		return nil, nil, fmt.Errorf("invalid max fee: %s", dynamicFeeTx.MaxFeePerGas)
 	}
 	if _, ok := amount.SetString(dynamicFeeTx.Amount, 10); !ok {
 		return nil, nil, fmt.Errorf("invalid amount: %s", dynamicFeeTx.Amount)
@@ -513,24 +507,31 @@ func (c *ChainAdaptor) buildDynamicFeeTx(base64Tx string) (*types.DynamicFeeTx, 
 		"isEthTransfer", evmbase.IsEthTransfer(&dynamicFeeTx),
 	)
 
-	// 5. Handle contract interaction vs direct transfer
+	var GasLimit uint64
 	if evmbase.IsEthTransfer(&dynamicFeeTx) {
 		finalToAddress = toAddress
 		finalAmount = amount
+		GasLimit = NativeTokenGasLimit
 	} else {
 		contractAddress := common.HexToAddress(dynamicFeeTx.ContractAddress)
 		buildData = evmbase.BuildErc20Data(toAddress, amount)
 		finalToAddress = contractAddress
 		finalAmount = big.NewInt(0)
+		GasLimit = Erc20TokenGasLimit
 	}
 
-	// 6. Create dynamic fee transaction
+	txNonce, err := c.ethClient.GetTransactionAccount(common.HexToAddress(dynamicFeeTx.FromAddress))
+	if err != nil {
+		log.Error("get address nonce fail", "err", err)
+		return nil, nil, err
+	}
+
 	dFeeTx := &types.DynamicFeeTx{
 		ChainID:   chainID,
-		Nonce:     dynamicFeeTx.Nonce,
-		GasTipCap: maxPriorityFeePerGas,
-		GasFeeCap: maxFeePerGas,
-		Gas:       dynamicFeeTx.GasLimit,
+		Nonce:     txNonce.Uint64(),
+		GasTipCap: big.NewInt(int64(MaxPriorityFeePerGas)),
+		GasFeeCap: big.NewInt(int64(MaxFeePerGas)),
+		Gas:       GasLimit,
 		To:        &finalToAddress,
 		Value:     finalAmount,
 		Data:      buildData,

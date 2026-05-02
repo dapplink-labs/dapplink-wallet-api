@@ -73,6 +73,8 @@ type EthClient interface {
 	TxReceiptByHash(common.Hash) (*types.Receipt, error)
 	EthGetCode(common.Address) (string, error)
 	GetBalance(address common.Address) (*big.Int, error)
+	GetTransactionAccount(address common.Address) (*big.Int, error)
+
 	Close()
 }
 
@@ -332,6 +334,18 @@ func (c *clnt) GetBalance(address common.Address) (*big.Int, error) {
 
 	balance := (*big.Int)(&result)
 	return balance, nil
+}
+
+func (c *clnt) GetTransactionAccount(address common.Address) (*big.Int, error) {
+	ctxwt, cancel := context.WithTimeout(context.Background(), defaultRequestTimeout)
+	defer cancel()
+	var result hexutil.Big
+	err := c.rpc.CallContext(ctxwt, &result, "eth_getTransactionCount", address, "pending")
+	if err != nil {
+		return nil, fmt.Errorf("get transaction count failed: %w", err)
+	}
+	nonce := (*big.Int)(&result)
+	return nonce, nil
 }
 
 func (c *clnt) Close() {

@@ -7,7 +7,10 @@
 package riskcontroller
 
 import (
+	context "context"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -15,12 +18,19 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-const ()
+const (
+	RiskControllerServices_CheckAmlAddress_FullMethodName        = "/dapplink.RiskControllerServices/checkAmlAddress"
+	RiskControllerServices_CheckChainTransactions_FullMethodName = "/dapplink.RiskControllerServices/checkChainTransactions"
+	RiskControllerServices_CheckUserTransaction_FullMethodName   = "/dapplink.RiskControllerServices/checkUserTransaction"
+)
 
 // RiskControllerServicesClient is the client API for RiskControllerServices service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RiskControllerServicesClient interface {
+	CheckAmlAddress(ctx context.Context, in *CheckAmlAddressRequest, opts ...grpc.CallOption) (*CheckAmlAddressResponse, error)
+	CheckChainTransactions(ctx context.Context, in *CheckChainTransactionsRequest, opts ...grpc.CallOption) (*CheckChainTransactionsResponse, error)
+	CheckUserTransaction(ctx context.Context, in *CheckUserTransactionRequest, opts ...grpc.CallOption) (*CheckUserTransactionResponse, error)
 }
 
 type riskControllerServicesClient struct {
@@ -31,14 +41,54 @@ func NewRiskControllerServicesClient(cc grpc.ClientConnInterface) RiskController
 	return &riskControllerServicesClient{cc}
 }
 
+func (c *riskControllerServicesClient) CheckAmlAddress(ctx context.Context, in *CheckAmlAddressRequest, opts ...grpc.CallOption) (*CheckAmlAddressResponse, error) {
+	out := new(CheckAmlAddressResponse)
+	err := c.cc.Invoke(ctx, RiskControllerServices_CheckAmlAddress_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *riskControllerServicesClient) CheckChainTransactions(ctx context.Context, in *CheckChainTransactionsRequest, opts ...grpc.CallOption) (*CheckChainTransactionsResponse, error) {
+	out := new(CheckChainTransactionsResponse)
+	err := c.cc.Invoke(ctx, RiskControllerServices_CheckChainTransactions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *riskControllerServicesClient) CheckUserTransaction(ctx context.Context, in *CheckUserTransactionRequest, opts ...grpc.CallOption) (*CheckUserTransactionResponse, error) {
+	out := new(CheckUserTransactionResponse)
+	err := c.cc.Invoke(ctx, RiskControllerServices_CheckUserTransaction_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RiskControllerServicesServer is the server API for RiskControllerServices service.
 // All implementations should embed UnimplementedRiskControllerServicesServer
 // for forward compatibility
 type RiskControllerServicesServer interface {
+	CheckAmlAddress(context.Context, *CheckAmlAddressRequest) (*CheckAmlAddressResponse, error)
+	CheckChainTransactions(context.Context, *CheckChainTransactionsRequest) (*CheckChainTransactionsResponse, error)
+	CheckUserTransaction(context.Context, *CheckUserTransactionRequest) (*CheckUserTransactionResponse, error)
 }
 
 // UnimplementedRiskControllerServicesServer should be embedded to have forward compatible implementations.
 type UnimplementedRiskControllerServicesServer struct {
+}
+
+func (UnimplementedRiskControllerServicesServer) CheckAmlAddress(context.Context, *CheckAmlAddressRequest) (*CheckAmlAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckAmlAddress not implemented")
+}
+func (UnimplementedRiskControllerServicesServer) CheckChainTransactions(context.Context, *CheckChainTransactionsRequest) (*CheckChainTransactionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckChainTransactions not implemented")
+}
+func (UnimplementedRiskControllerServicesServer) CheckUserTransaction(context.Context, *CheckUserTransactionRequest) (*CheckUserTransactionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckUserTransaction not implemented")
 }
 
 // UnsafeRiskControllerServicesServer may be embedded to opt out of forward compatibility for this service.
@@ -52,13 +102,80 @@ func RegisterRiskControllerServicesServer(s grpc.ServiceRegistrar, srv RiskContr
 	s.RegisterService(&RiskControllerServices_ServiceDesc, srv)
 }
 
+func _RiskControllerServices_CheckAmlAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckAmlAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RiskControllerServicesServer).CheckAmlAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RiskControllerServices_CheckAmlAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RiskControllerServicesServer).CheckAmlAddress(ctx, req.(*CheckAmlAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RiskControllerServices_CheckChainTransactions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckChainTransactionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RiskControllerServicesServer).CheckChainTransactions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RiskControllerServices_CheckChainTransactions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RiskControllerServicesServer).CheckChainTransactions(ctx, req.(*CheckChainTransactionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RiskControllerServices_CheckUserTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckUserTransactionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RiskControllerServicesServer).CheckUserTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RiskControllerServices_CheckUserTransaction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RiskControllerServicesServer).CheckUserTransaction(ctx, req.(*CheckUserTransactionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RiskControllerServices_ServiceDesc is the grpc.ServiceDesc for RiskControllerServices service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var RiskControllerServices_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "dapplink.RiskControllerServices",
 	HandlerType: (*RiskControllerServicesServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "dapplink/riskcontroller.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "checkAmlAddress",
+			Handler:    _RiskControllerServices_CheckAmlAddress_Handler,
+		},
+		{
+			MethodName: "checkChainTransactions",
+			Handler:    _RiskControllerServices_CheckChainTransactions_Handler,
+		},
+		{
+			MethodName: "checkUserTransaction",
+			Handler:    _RiskControllerServices_CheckUserTransaction_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "dapplink/riskcontroller.proto",
 }

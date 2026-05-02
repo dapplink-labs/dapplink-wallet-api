@@ -15,13 +15,10 @@ type T struct {
 	} `json:"block_header"`
 }
 
-// Transaction 表示一个交易的结构
 type Transactiondata struct {
-	// 区块信息
 	BlockHash   string `json:"blockHash"`   // 区块哈希
 	BlockNumber string `json:"blockNumber"` // 区块高度(十六进制)
 
-	// 交易基本信息
 	Hash  string `json:"hash"`  // 交易哈希
 	From  string `json:"from"`  // 发送方地址
 	To    string `json:"to"`    // 接收方地址
@@ -66,7 +63,6 @@ type Block struct {
 	Uncles           []interface{}     `json:"uncles"`
 }
 
-// Account 结构体
 type Account struct {
 	Address             string          `json:"address"`
 	Balance             int64           `json:"balance"`
@@ -83,7 +79,6 @@ type Account struct {
 	AssetOptimized      bool            `json:"asset_optimized"`
 }
 
-// AccountResource 资源信息
 type AccountResource struct {
 	LatestConsumeTimeForEnergy                int64 `json:"latest_consume_time_for_energy"`
 	EnergyWindowSize                          int64 `json:"energy_window_size"`
@@ -91,7 +86,6 @@ type AccountResource struct {
 	EnergyWindowOptimized                     bool  `json:"energy_window_optimized"`
 }
 
-// Permission 权限信息
 type Permission struct {
 	Type           string `json:"type,omitempty"`
 	ID             int    `json:"id,omitempty"`
@@ -138,28 +132,6 @@ type ActivePermission struct {
 	Keys           []Keys `json:"keys"`
 }
 
-//type UnSignTransaction struct {
-//	Visible    bool    `json:"visible"`
-//	TxID       string  `json:"txID"`
-//	RawData    RawData `json:"raw_data"`
-//	RawDataHex string  `json:"raw_data_hex"`
-//}
-//
-//type UnSignTrc20Transaction struct {
-//	Result struct {
-//		Result bool `json:"result"`
-//	} `json:"result"`
-//	Transaction UnSignTransaction `json:"transaction"`
-//}
-//
-//type Transaction struct {
-//	Ret        []Ret    `json:"ret"`
-//	Signature  []string `json:"signature"`
-//	TxID       string   `json:"txID"`
-//	RawData    RawData  `json:"raw_data"`
-//	RawDataHex string   `json:"raw_data_hex"`
-//}
-
 type Ret struct {
 	ContractRet string `json:"contractRet"`
 }
@@ -172,17 +144,6 @@ type Value struct {
 	ContractAddress string `json:"contract_address"`
 	Data            string `json:"data"`
 }
-
-//
-//type Parameter struct {
-//	Value   Value  `json:"value"`
-//	TypeURL string `json:"type_url"`
-//}
-//
-//type Contract struct {
-//	Parameter Parameter `json:"parameter"`
-//	Type      string    `json:"type"`
-//}
 
 type TxStructure struct {
 	ContractAddress string `json:"contract_address"`
@@ -197,7 +158,6 @@ type BroadcastReturns struct {
 	Message string `json:"message"`
 }
 
-// 定义响应结构体
 type JSONRPCResponse struct {
 	JsonRPC string `json:"jsonrpc"`
 	ID      int    `json:"id"`
@@ -213,11 +173,6 @@ type Response[T any] struct {
 	Result  T      `json:"result"`
 }
 
-//type SendTxReq struct {
-//	RawData    RawData `json:"raw_data"`
-//	RawDataHex string  `json:"raw_data_hex"`
-//}
-
 type ChainParameters struct {
 	ChainParameter []struct {
 		Key   string `json:"key"`
@@ -225,7 +180,6 @@ type ChainParameters struct {
 	} `json:"chainParameter"`
 }
 
-// JSON-RPC 响应结构体
 type JSONRPCTrResponse struct {
 	JsonRPC string      `json:"jsonrpc"`
 	ID      int         `json:"id"`
@@ -236,20 +190,17 @@ type JSONRPCTrResponse struct {
 	} `json:"error,omitempty"`
 }
 
-// BlockResponse 区块响应结构
 type BlockResponse struct {
 	BlockID      string        `json:"blockID"`
 	BlockHeader  BlockHeader   `json:"block_header"`
 	Transactions []Transaction `json:"transactions"`
 }
 
-// BlockHeader 区块头信息
 type BlockHeader struct {
 	RawData          BlockHeaderRaw `json:"raw_data"`
 	WitnessSignature string         `json:"witness_signature"`
 }
 
-// BlockHeaderRaw 区块头原始数据
 type BlockHeaderRaw struct {
 	Number         int64  `json:"number"`
 	TxTrieRoot     string `json:"txTrieRoot"`
@@ -259,7 +210,6 @@ type BlockHeaderRaw struct {
 	Timestamp      int64  `json:"timestamp"`
 }
 
-// Transaction 交易信息
 type Transaction struct {
 	Ret        []TransactionRet `json:"ret"`
 	Signature  []string         `json:"signature"`
@@ -268,12 +218,10 @@ type Transaction struct {
 	RawDataHex string           `json:"raw_data_hex"`
 }
 
-// TransactionRet 交易结果
 type TransactionRet struct {
 	ContractRet string `json:"contractRet"`
 }
 
-// TxRawData 交易原始数据
 type TxRawData struct {
 	Contract      []Contract `json:"contract"`
 	RefBlockBytes string     `json:"ref_block_bytes"`
@@ -283,20 +231,17 @@ type TxRawData struct {
 	Timestamp     int64      `json:"timestamp"`
 }
 
-// Contract 合约信息
 type Contract struct {
 	Parameter    Parameter `json:"parameter"`
 	Type         string    `json:"type"`
 	PermissionID int       `json:"Permission_id,omitempty"`
 }
 
-// Parameter 合约参数
 type Parameter struct {
 	Value   ContractValue `json:"value"`
 	TypeURL string        `json:"type_url"`
 }
 
-// ContractValue 合约值
 type ContractValue struct {
 	OwnerAddress    string `json:"owner_address"`
 	ToAddress       string `json:"to_address"`
