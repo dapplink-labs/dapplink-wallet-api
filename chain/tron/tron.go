@@ -124,9 +124,67 @@ func (c *ChainAdaptor) GetBlock(ctx context.Context, req *walletapi.BlockRequest
 	var txList []*walletapi.TransactionList
 	if blockResp.Transactions != nil {
 		for _, tx := range blockResp.Transactions {
-			txList = append(txList, &walletapi.TransactionList{
-				TxHash: tx.TxID,
-			})
+			var fromAddrs []*walletapi.FromAddress
+			var toAddrs []*walletapi.ToAddress
+			var contractAddress string
+			var txType uint32
+			if len(tx.RawData.Contract) > 0 {
+				contract := tx.RawData.Contract[0]
+				switch contract.Type {
+				case "TransferContract": // Native TRX transfer
+					txType = 1
+					if contract.Parameter.Value.OwnerAddress != "" {
+						fromAddr := HexToTronAddress(contract.Parameter.Value.OwnerAddress)
+						fromAddrs = append(fromAddrs, &walletapi.FromAddress{
+							Address: fromAddr,
+							Amount:  strconv.FormatInt(contract.Parameter.Value.Amount, 10),
+						})
+					}
+					if contract.Parameter.Value.ToAddress != "" {
+						toAddr := HexToTronAddress(contract.Parameter.Value.ToAddress)
+						toAddrs = append(toAddrs, &walletapi.ToAddress{
+							Address: toAddr,
+							Amount:  strconv.FormatInt(contract.Parameter.Value.Amount, 10),
+						})
+					}
+				case "TriggerSmartContract": // TRC20 Token transfer
+					txType = 2
+					if contract.Parameter.Value.ContractAddress != "" {
+						contractAddress = HexToTronAddress(contract.Parameter.Value.ContractAddress)
+					}
+					if contract.Parameter.Value.OwnerAddress != "" {
+						fromAddr := HexToTronAddress(contract.Parameter.Value.OwnerAddress)
+						fromAddrs = append(fromAddrs, &walletapi.FromAddress{
+							Address: fromAddr,
+						})
+					}
+					if contract.Parameter.Value.Data != "" {
+						data := contract.Parameter.Value.Data
+						if len(data) >= 136 && strings.HasPrefix(data, "a9059cbb") {
+							toAddrHex := "41" + data[32:72]
+							toAddr := HexToTronAddress(toAddrHex)
+							amountHex := data[72:136]
+							amount := "0"
+							if amountBig, ok := new(big.Int).SetString(amountHex, 16); ok {
+								amount = amountBig.String()
+							}
+							fromAddrs[0].Amount = amount
+							toAddrs = append(toAddrs, &walletapi.ToAddress{
+								Address: toAddr,
+								Amount:  amount,
+							})
+						}
+					}
+				}
+			}
+			transaction := &walletapi.TransactionList{
+				TxHash:          tx.TxID,
+				From:            fromAddrs,
+				To:              toAddrs,
+				ContractAddress: contractAddress,
+				TxType:          txType,
+			}
+			txList = append(txList, transaction)
 		}
 	}
 	return &walletapi.BlockResponse{
