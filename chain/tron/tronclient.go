@@ -170,3 +170,67 @@ func (client *TronClient) JsonRpcGetTransactionByHash(params interface{}, result
 	}
 	return nil
 }
+
+// CreateTRXTransaction creates an unsigned TRX transfer transaction
+func (client *TronClient) CreateTRXTransaction(fromAddress, toAddress string, amount int64) (*Transaction, error) {
+	requestBody := map[string]interface{}{
+		"owner_address": fromAddress,
+		"to_address":    toAddress,
+		"amount":        amount,
+		"visible":       true,
+	}
+
+	var response Transaction
+	resp, err := client.rpc.R().
+		SetBody(requestBody).
+		SetResult(&response).
+		Post("/wallet/createtransaction")
+
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %v", err)
+	}
+	if resp.IsError() {
+		return nil, fmt.Errorf("API request failed with status code: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+
+	log.Info("create TRX transaction", "from", fromAddress, "to", toAddress, "amount", amount)
+	return &response, nil
+}
+
+// CreateTRC20Transaction creates an unsigned TRC20 token transfer transaction
+func (client *TronClient) CreateTRC20Transaction(fromAddress, toAddress, contractAddress string, amount int64) (*Transaction, error) {
+	toAddressHex := TronAddressToHex(toAddress)
+	if toAddressHex == "" {
+		return nil, fmt.Errorf("invalid to address: %s", toAddress)
+	}
+	toAddressHex = toAddressHex[2:]
+	if len(toAddressHex) < 64 {
+		toAddressHex = PadLeftZero(toAddressHex, 64)
+	}
+
+	amountHex := fmt.Sprintf("%064x", amount)
+	requestBody := map[string]interface{}{
+		"owner_address":     fromAddress,
+		"contract_address":  contractAddress,
+		"function_selector": "transfer(address,uint256)",
+		"parameter":         toAddressHex + amountHex,
+		"fee_limit":         100000000, // 100 TRX
+		"call_value":        0,
+		"visible":           true,
+	}
+
+	var response Transaction
+	resp, err := client.rpc.R().
+		SetBody(requestBody).
+		SetResult(&response).
+		Post("/wallet/triggersmartcontract")
+
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %v", err)
+	}
+	if resp.IsError() {
+		return nil, fmt.Errorf("API request failed with status code: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+	}
+	log.Info("create TRC20 transaction", "from", fromAddress, "to", toAddress, "contract", contractAddress, "amount", amount)
+	return &response, nil
+}

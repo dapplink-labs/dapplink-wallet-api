@@ -2,7 +2,10 @@ package tron
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"math/big"
 	"strconv"
 	"strings"
@@ -346,8 +349,34 @@ func (c *ChainAdaptor) BuildTransactionSchema(ctx context.Context, request *wall
 func (c *ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *walletapi.UnSignTransactionRequest) (*walletapi.UnSignTransactionResponse, error) {
 	var unsignedTxList []*walletapi.UnsignedTransactionMessageHash
 	for _, base64Tx := range request.Base64Txn {
+		jsonBytes, err := base64.StdEncoding.DecodeString(base64Tx.Base64Tx)
+		if err != nil {
+			log.Error("decode string fail", "err", err)
+			return nil, err
+		}
+		var data TxStructure
+		if err := json.Unmarshal(jsonBytes, &data); err != nil {
+			log.Error("parse json fail", "err", err)
+			return nil, err
+		}
+		var transaction *Transaction
+		if data.ContractAddress == "" {
+			transaction, err = c.tronClient.CreateTRXTransaction(data.FromAddress, data.ToAddress, data.Value)
+		} else {
+			transaction, err = c.tronClient.CreateTRC20Transaction(data.FromAddress, data.ToAddress, data.ContractAddress, data.Value)
+		}
+		if err != nil {
+			log.Error("create transaction fail", "err", err)
+			return nil, err
+		}
+		txBytes, err := json.Marshal(transaction)
+		if err != nil {
+			log.Error("marshal transaction fail", "err", err)
+			return nil, err
+		}
+		unsignedTxBase64 := base64.StdEncoding.EncodeToString(txBytes)
 		unsignedTxList = append(unsignedTxList, &walletapi.UnsignedTransactionMessageHash{
-			UnsignedTx: base64Tx.Base64Tx,
+			UnsignedTx: unsignedTxBase64,
 		})
 	}
 	return &walletapi.UnSignTransactionResponse{
@@ -360,9 +389,68 @@ func (c *ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *wall
 func (c *ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *walletapi.SignedTransactionRequest) (*walletapi.SignedTransactionResponse, error) {
 	var signedTxList []*walletapi.SignedTxWithHash
 	for _, txWithSig := range request.TxnWithSignature {
+		txBytes, err := base64.StdEncoding.DecodeString(txWithSig.Base64Tx)
+		if err != nil {
+			log.Error("decode base64 tx fail", "err", err)
+			signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
+				SignedTx:  "",
+				TxHash:    "",
+				IsSuccess: false,
+			})
+			continue
+		}
+		var transaction Transaction
+		if err := json.Unmarshal(txBytes, &transaction); err != nil {
+			log.Error("unmarshal transaction fail", "err", err)
+			signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
+				SignedTx:  "",
+				TxHash:    "",
+				IsSuccess: false,
+			})
+			continue
+		}
+		signatureBytes, err := hex.DecodeString(strings.TrimPrefix(txWithSig.Signature, "0x"))
+		if err != nil {
+			log.Error("decode signature fail", "err", err)
+			signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
+				SignedTx:  "",
+				TxHash:    "",
+				IsSuccess: false,
+			})
+			continue
+		}
+		signatureHex := hex.EncodeToString(signatureBytes)
+		transaction.Signature = []string{signatureHex}
+		if transaction.TxID == "" {
+			if transaction.RawDataHex != "" {
+				rawDataBytes, err := hex.DecodeString(transaction.RawDataHex)
+				if err != nil {
+					log.Error("decode raw data hex fail", "err", err)
+					signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
+						SignedTx:  "",
+						TxHash:    "",
+						IsSuccess: false,
+					})
+					continue
+				}
+				hash := sha256.Sum256(rawDataBytes)
+				transaction.TxID = hex.EncodeToString(hash[:])
+			}
+		}
+		signedTxBytes, err := json.Marshal(transaction)
+		if err != nil {
+			log.Error("marshal signed tx fail", "err", err)
+			signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
+				SignedTx:  "",
+				TxHash:    "",
+				IsSuccess: false,
+			})
+			continue
+		}
 		signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
-			SignedTx: txWithSig.Base64Tx,
-			TxHash:   "",
+			SignedTx:  base64.StdEncoding.EncodeToString(signedTxBytes),
+			TxHash:    transaction.TxID,
+			IsSuccess: true,
 		})
 	}
 	return &walletapi.SignedTransactionResponse{
