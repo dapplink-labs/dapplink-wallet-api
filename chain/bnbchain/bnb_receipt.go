@@ -22,30 +22,48 @@ type userOpERC20Transfer struct {
 	From     string
 	To       string
 	Amount   string
+	Index    uint
 }
 
 func (c *ChainAdaptor) tryParseUserOpERC20Transfer(blockItem evmbase.TransactionList) (userOpERC20Transfer, bool) {
-	if c.entryPointAddress == (common.Address{}) {
+	transfers := c.tryParseUserOpBEP20Transfers(blockItem)
+	if len(transfers) == 0 {
 		return userOpERC20Transfer{}, false
 	}
+	return transfers[0], true
+}
+
+func (c *ChainAdaptor) tryParseUserOpBEP20Transfers(blockItem evmbase.TransactionList) []userOpERC20Transfer {
+	if c.entryPointAddress == (common.Address{}) {
+		return nil
+	}
 	if normalizeAddress(blockItem.To) != normalizeAddress(c.entryPointAddress.Hex()) {
-		return userOpERC20Transfer{}, false
+		return nil
 	}
 	input := strings.TrimPrefix(blockItem.Input, "0x")
 	if len(input) < 8 || !strings.EqualFold(input[:8], common.Bytes2Hex(handleOpsSelector)) {
-		return userOpERC20Transfer{}, false
+		return nil
 	}
 
 	receipt, err := c.ethClient.TxReceiptByHash(common.HexToHash(blockItem.Hash))
 	if err != nil || receipt == nil {
 		log.Warn("fetch receipt for UserOp tx failed", "hash", blockItem.Hash, "err", err)
-		return userOpERC20Transfer{}, false
+		return nil
 	}
 
-	return c.parseUserOpERC20TransferFromReceipt(receipt.Logs)
+	return c.parseUserOpBEP20TransfersFromReceipt(receipt.Logs)
 }
 
 func (c *ChainAdaptor) parseUserOpERC20TransferFromReceipt(logs []*types.Log) (userOpERC20Transfer, bool) {
+	transfers := c.parseUserOpBEP20TransfersFromReceipt(logs)
+	if len(transfers) == 0 {
+		return userOpERC20Transfer{}, false
+	}
+	return transfers[0], true
+}
+
+func (c *ChainAdaptor) parseUserOpBEP20TransfersFromReceipt(logs []*types.Log) []userOpERC20Transfer {
+	transfers := make([]userOpERC20Transfer, 0)
 	for _, lg := range logs {
 		if lg == nil || len(lg.Topics) != 3 || lg.Topics[0] != transferEventTopic {
 			continue
@@ -59,12 +77,16 @@ func (c *ChainAdaptor) parseUserOpERC20TransferFromReceipt(logs []*types.Log) (u
 		from := common.HexToAddress(lg.Topics[1].Hex()).Hex()
 		to := common.HexToAddress(lg.Topics[2].Hex()).Hex()
 		value := new(big.Int).SetBytes(lg.Data)
-		return userOpERC20Transfer{
+		if value.Sign() <= 0 {
+			continue
+		}
+		transfers = append(transfers, userOpERC20Transfer{
 			Contract: lg.Address.Hex(),
 			From:     from,
 			To:       to,
 			Amount:   value.String(),
-		}, true
+			Index:    lg.Index,
+		})
 	}
-	return userOpERC20Transfer{}, false
+	return transfers
 }
