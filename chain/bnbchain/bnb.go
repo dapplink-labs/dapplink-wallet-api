@@ -285,21 +285,23 @@ func (c ChainAdaptor) buildBlockWithTransactions(rpcBlock *evmbase.RpcBlock) (*w
 		return nil, fmt.Errorf("failed to decode block number: %w", heightErr)
 	}
 
-	txResults := make([]*walletapi.TransactionList, len(rpcBlock.Transactions))
+	txResults := make([][]*walletapi.TransactionList, len(rpcBlock.Transactions))
 	var wg sync.WaitGroup
 	for i, blockItem := range rpcBlock.Transactions {
 		wg.Add(1)
 		go func(index int, tx evmbase.TransactionList) {
 			defer wg.Done()
-			txResults[index] = c.buildBlockTransaction(tx, rpcBlock.Hash.String(), blockHeight)
+			txResults[index] = c.buildBlockTransactions(tx, rpcBlock.Hash.String(), blockHeight)
 		}(i, blockItem)
 	}
 	wg.Wait()
 
 	transactionList := make([]*walletapi.TransactionList, 0, len(txResults))
-	for _, txItem := range txResults {
-		if txItem != nil {
-			transactionList = append(transactionList, txItem)
+	for _, txItems := range txResults {
+		for _, txItem := range txItems {
+			if txItem != nil {
+				transactionList = append(transactionList, txItem)
+			}
 		}
 	}
 
@@ -317,11 +319,25 @@ func (c ChainAdaptor) buildBlockWithTransactions(rpcBlock *evmbase.RpcBlock) (*w
 	}, nil
 }
 
-func (c ChainAdaptor) buildBlockTransaction(blockItem evmbase.TransactionList, blockHash string, blockHeight uint64) *walletapi.TransactionList {
+func (c ChainAdaptor) buildBlockTransactions(blockItem evmbase.TransactionList, blockHash string, blockHeight uint64) []*walletapi.TransactionList {
 	if blockItem.To == "" {
 		return nil
 	}
 
+	receiptTransfers := c.buildBEP20LogTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
+	if c.isUserOpHandleOps(blockItem) {
+		nativeTransfers := c.buildNativeTraceTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
+		if len(receiptTransfers)+len(nativeTransfers) > 0 {
+			return append(receiptTransfers, nativeTransfers...)
+		}
+	}
+	if len(receiptTransfers) > 0 {
+		return receiptTransfers
+	}
+	return []*walletapi.TransactionList{c.buildExternalTransaction(blockItem, blockHash, blockHeight, blockItem.GasPrice)}
+}
+
+func (c ChainAdaptor) buildExternalTransaction(blockItem evmbase.TransactionList, blockHash string, blockHeight uint64, fee string) *walletapi.TransactionList {
 	txType := uint32(1)
 	contractAddress := NativeTokenAddress
 	amount := blockItem.Value
@@ -338,12 +354,6 @@ func (c ChainAdaptor) buildBlockTransaction(blockItem evmbase.TransactionList, b
 			toAddress = parsedTo
 			amount = parsedAmount
 		}
-	} else if transfer, parsed := c.tryParseUserOpERC20Transfer(blockItem); parsed {
-		txType = 3
-		contractAddress = transfer.Contract
-		fromAddress = transfer.From
-		toAddress = transfer.To
-		amount = transfer.Amount
 	}
 
 	fromList := []*walletapi.FromAddress{{
@@ -356,8 +366,8 @@ func (c ChainAdaptor) buildBlockTransaction(blockItem evmbase.TransactionList, b
 	}}
 
 	return &walletapi.TransactionList{
-		TxHash:          blockItem.Hash,
-		Fee:             blockItem.GasPrice,
+		TxHash:          transferUniqueHash(blockItem.Hash, transferEntryExternal, 0),
+		Fee:             fee,
 		Status:          0,
 		TxType:          txType,
 		ContractAddress: contractAddress,
@@ -365,6 +375,88 @@ func (c ChainAdaptor) buildBlockTransaction(blockItem evmbase.TransactionList, b
 		To:              toList,
 		BlockHash:       blockHash,
 		BlockHeight:     blockHeight,
+	}
+}
+
+func (c ChainAdaptor) buildBEP20LogTransactions(blockItem evmbase.TransactionList, blockHash string, blockHeight uint64, fee string) []*walletapi.TransactionList {
+	if !c.shouldInspectReceiptTransfers(blockItem) {
+		return nil
+	}
+	receipt, err := c.ethClient.TxReceiptByHash(common.HexToHash(blockItem.Hash))
+	if err != nil || receipt == nil {
+		log.Warn("fetch receipt for BEP20 transfers failed", "hash", blockItem.Hash, "err", err)
+		return nil
+	}
+
+	transfers := c.parseUserOpBEP20TransfersFromReceipt(receipt.Logs)
+	out := make([]*walletapi.TransactionList, 0, len(transfers))
+	for _, transfer := range transfers {
+		out = append(out, transfer.toTransactionList(blockItem.Hash, blockHash, blockHeight, fee))
+	}
+	return out
+}
+
+func (c ChainAdaptor) buildNativeTraceTransactions(blockItem evmbase.TransactionList, blockHash string, blockHeight uint64, fee string) []*walletapi.TransactionList {
+	transfers := c.tryParseUserOpNativeTransfers(blockItem)
+	out := make([]*walletapi.TransactionList, 0, len(transfers))
+	for _, transfer := range transfers {
+		out = append(out, transfer.toTransactionList(blockItem.Hash, blockHash, blockHeight, fee))
+	}
+	return out
+}
+
+func (c ChainAdaptor) shouldInspectReceiptTransfers(blockItem evmbase.TransactionList) bool {
+	return c.isUserOpHandleOps(blockItem) || c.shouldParseERC20Transfer(blockItem)
+}
+
+func (c ChainAdaptor) isUserOpHandleOps(blockItem evmbase.TransactionList) bool {
+	if c.entryPointAddress == (common.Address{}) {
+		return false
+	}
+	if normalizeAddress(blockItem.To) != normalizeAddress(c.entryPointAddress.Hex()) {
+		return false
+	}
+	input := strings.TrimPrefix(blockItem.Input, "0x")
+	return len(input) >= 8 && strings.EqualFold(input[:8], common.Bytes2Hex(handleOpsSelector))
+}
+
+func (transfer userOpERC20Transfer) toTransactionList(txHash, blockHash string, blockHeight uint64, fee string) *walletapi.TransactionList {
+	return &walletapi.TransactionList{
+		TxHash:          transferUniqueHash(txHash, transferEntryTokenLog, transfer.Index),
+		Fee:             fee,
+		Status:          0,
+		TxType:          3,
+		ContractAddress: transfer.Contract,
+		From: []*walletapi.FromAddress{{
+			Address: transfer.From,
+			Amount:  transfer.Amount,
+		}},
+		To: []*walletapi.ToAddress{{
+			Address: transfer.To,
+			Amount:  transfer.Amount,
+		}},
+		BlockHash:   blockHash,
+		BlockHeight: blockHeight,
+	}
+}
+
+func (transfer nativeTraceTransfer) toTransactionList(txHash, blockHash string, blockHeight uint64, fee string) *walletapi.TransactionList {
+	return &walletapi.TransactionList{
+		TxHash:          transferUniqueHash(txHash, transferEntryNativeTrace, transfer.Index),
+		Fee:             fee,
+		Status:          0,
+		TxType:          1,
+		ContractAddress: NativeTokenAddress,
+		From: []*walletapi.FromAddress{{
+			Address: transfer.From,
+			Amount:  transfer.Amount,
+		}},
+		To: []*walletapi.ToAddress{{
+			Address: transfer.To,
+			Amount:  transfer.Amount,
+		}},
+		BlockHash:   blockHash,
+		BlockHeight: blockHeight,
 	}
 }
 
@@ -402,7 +494,8 @@ func parseERC20TransferData(input string) (string, string, error) {
 }
 
 func (c ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.TransactionByHashRequest) (*walletapi.TransactionByHashResponse, error) {
-	tx, err := c.ethClient.TxByHash(common.HexToHash(req.Hash))
+	txHash := canonicalTxHash(req.Hash)
+	tx, err := c.ethClient.TxByHash(common.HexToHash(txHash))
 	if err != nil {
 		if errors.Is(err, ethereum.NotFound) {
 			return &walletapi.TransactionByHashResponse{
@@ -416,7 +509,7 @@ func (c ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.T
 			Msg:  "Ethereum Tx Fetch Error",
 		}, nil
 	}
-	receipt, err := c.ethClient.TxReceiptByHash(common.HexToHash(req.Hash))
+	receipt, err := c.ethClient.TxReceiptByHash(common.HexToHash(txHash))
 	if err != nil {
 		log.Error("get transaction receipt error", "err", err)
 		return &walletapi.TransactionByHashResponse{
