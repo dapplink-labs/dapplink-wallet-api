@@ -35,6 +35,7 @@ const (
 	NativeTokenAddress  string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 	erc20TransferMethod        = "a9059cbb"
 
+	// Bound per-block RPC fan-out because BSC blocks can contain many transactions.
 	maxBlockTransactionWorkers = 16
 )
 
@@ -341,6 +342,8 @@ func (c ChainAdaptor) buildBlockTransactions(blockItem evmbase.TransactionList, 
 	}
 
 	if c.isUserOpHandleOps(blockItem) {
+		// The EntryPoint outer transaction is only an AA envelope; deposits must come
+		// from token Transfer logs or native-value trace calls inside the operation.
 		receiptTransfers := c.buildBEP20LogTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
 		nativeTransfers := c.buildNativeTraceTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
 		return append(receiptTransfers, nativeTransfers...)

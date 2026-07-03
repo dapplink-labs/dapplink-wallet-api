@@ -26,6 +26,8 @@ const (
 	transferEntryNativeTrace = "native_trace"
 )
 
+// transferUniqueHash keeps normal chain hashes unchanged, while giving each
+// AA-derived internal transfer a stable idempotency key under the same outer tx.
 func transferUniqueHash(txHash, entryType string, index uint) string {
 	if entryType == transferEntryExternal && index == 0 {
 		return txHash
@@ -33,6 +35,7 @@ func transferUniqueHash(txHash, entryType string, index uint) string {
 	return fmt.Sprintf("%s:%s:%d", txHash, entryType, index)
 }
 
+// canonicalTxHash strips the internal-transfer suffix before querying the chain.
 func canonicalTxHash(hash string) string {
 	parts := strings.Split(hash, ":")
 	if len(parts) >= 3 {
@@ -45,6 +48,7 @@ func collectNativeTraceTransfers(frame TraceCallFrame) []nativeTraceTransfer {
 	transfers := make([]nativeTraceTransfer, 0)
 	var walk func(TraceCallFrame)
 	walk = func(current TraceCallFrame) {
+		// Failed internal calls must not create deposit records.
 		if strings.TrimSpace(current.Error) != "" {
 			return
 		}
@@ -63,6 +67,7 @@ func collectNativeTraceTransfers(frame TraceCallFrame) []nativeTraceTransfer {
 			walk(child)
 		}
 	}
+	// Start from child calls so the root EntryPoint call is not treated as a deposit.
 	for _, child := range frame.Calls {
 		walk(child)
 	}
@@ -95,6 +100,7 @@ func (c *ChainAdaptor) tryParseUserOpNativeTransfers(blockItem evmbase.Transacti
 		return nil
 	}
 
+	// Native BNB movement inside AA handleOps is only visible through call traces.
 	trace, err := c.ethClient.TraceTransaction(common.HexToHash(blockItem.Hash))
 	if err != nil || trace == nil {
 		log.Warn("fetch trace for UserOp native transfers failed", "hash", blockItem.Hash, "err", err)
