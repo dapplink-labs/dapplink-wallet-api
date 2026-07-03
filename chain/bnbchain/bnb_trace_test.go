@@ -37,3 +37,29 @@ func TestCollectNativeTraceTransfersReturnsPositiveValueCalls(t *testing.T) {
 		t.Fatalf("second native transfer mismatch: %#v", transfers[1])
 	}
 }
+
+func TestCollectNativeTraceTransfersSkipsErroredFrames(t *testing.T) {
+	frame := TraceCallFrame{
+		Calls: []TraceCallFrame{
+			{
+				From:  "0x1111111111111111111111111111111111111111",
+				To:    "0x2222222222222222222222222222222222222222",
+				Value: "0xde0b6b3a7640000",
+				Error: "execution reverted",
+			},
+			{
+				From:  "0x3333333333333333333333333333333333333333",
+				To:    "0x4444444444444444444444444444444444444444",
+				Value: "0x2a",
+			},
+		},
+	}
+
+	transfers := collectNativeTraceTransfers(frame)
+	if len(transfers) != 1 {
+		t.Fatalf("len(transfers) = %d, want 1", len(transfers))
+	}
+	if transfers[0].From != "0x3333333333333333333333333333333333333333" || transfers[0].Amount != "42" {
+		t.Fatalf("transfer mismatch: %#v", transfers[0])
+	}
+}

@@ -54,6 +54,7 @@ type TraceCallFrame struct {
 	From  string           `json:"from"`
 	To    string           `json:"to"`
 	Value string           `json:"value"`
+	Error string           `json:"error"`
 	Calls []TraceCallFrame `json:"calls"`
 }
 

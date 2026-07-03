@@ -45,6 +45,9 @@ func collectNativeTraceTransfers(frame TraceCallFrame) []nativeTraceTransfer {
 	transfers := make([]nativeTraceTransfer, 0)
 	var walk func(TraceCallFrame)
 	walk = func(current TraceCallFrame) {
+		if strings.TrimSpace(current.Error) != "" {
+			return
+		}
 		if amount, ok := parseTraceValue(current.Value); ok &&
 			amount.Sign() > 0 &&
 			common.IsHexAddress(current.From) &&

@@ -34,6 +34,8 @@ const (
 	Erc20TokenGasLimit  uint64 = 120000
 	NativeTokenAddress  string = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 	erc20TransferMethod        = "a9059cbb"
+
+	maxBlockTransactionWorkers = 16
 )
 
 type ChainAdaptor struct {
@@ -286,15 +288,29 @@ func (c ChainAdaptor) buildBlockWithTransactions(rpcBlock *evmbase.RpcBlock) (*w
 	}
 
 	txResults := make([][]*walletapi.TransactionList, len(rpcBlock.Transactions))
-	var wg sync.WaitGroup
-	for i, blockItem := range rpcBlock.Transactions {
-		wg.Add(1)
-		go func(index int, tx evmbase.TransactionList) {
-			defer wg.Done()
-			txResults[index] = c.buildBlockTransactions(tx, rpcBlock.Hash.String(), blockHeight)
-		}(i, blockItem)
+	workerCount := maxBlockTransactionWorkers
+	if len(rpcBlock.Transactions) < workerCount {
+		workerCount = len(rpcBlock.Transactions)
 	}
-	wg.Wait()
+	if workerCount > 0 {
+		jobs := make(chan int)
+		var wg sync.WaitGroup
+		wg.Add(workerCount)
+		for worker := 0; worker < workerCount; worker++ {
+			go func() {
+				defer wg.Done()
+				for index := range jobs {
+					tx := rpcBlock.Transactions[index]
+					txResults[index] = c.buildBlockTransactions(tx, rpcBlock.Hash.String(), blockHeight)
+				}
+			}()
+		}
+		for i := range rpcBlock.Transactions {
+			jobs <- i
+		}
+		close(jobs)
+		wg.Wait()
+	}
 
 	transactionList := make([]*walletapi.TransactionList, 0, len(txResults))
 	for _, txItems := range txResults {
@@ -324,15 +340,10 @@ func (c ChainAdaptor) buildBlockTransactions(blockItem evmbase.TransactionList, 
 		return nil
 	}
 
-	receiptTransfers := c.buildBEP20LogTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
 	if c.isUserOpHandleOps(blockItem) {
+		receiptTransfers := c.buildBEP20LogTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
 		nativeTransfers := c.buildNativeTraceTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
-		if len(receiptTransfers)+len(nativeTransfers) > 0 {
-			return append(receiptTransfers, nativeTransfers...)
-		}
-	}
-	if len(receiptTransfers) > 0 {
-		return receiptTransfers
+		return append(receiptTransfers, nativeTransfers...)
 	}
 	return []*walletapi.TransactionList{c.buildExternalTransaction(blockItem, blockHash, blockHeight, blockItem.GasPrice)}
 }
@@ -406,7 +417,7 @@ func (c ChainAdaptor) buildNativeTraceTransactions(blockItem evmbase.Transaction
 }
 
 func (c ChainAdaptor) shouldInspectReceiptTransfers(blockItem evmbase.TransactionList) bool {
-	return c.isUserOpHandleOps(blockItem) || c.shouldParseERC20Transfer(blockItem)
+	return c.isUserOpHandleOps(blockItem)
 }
 
 func (c ChainAdaptor) isUserOpHandleOps(blockItem evmbase.TransactionList) bool {
