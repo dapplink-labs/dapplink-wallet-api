@@ -63,16 +63,18 @@ func (c *ChainAdaptor) parseUserOpERC20TransferFromReceipt(logs []*types.Log) (u
 }
 
 func (c *ChainAdaptor) parseUserOpBEP20TransfersFromReceipt(logs []*types.Log) []userOpERC20Transfer {
+	if len(c.contractAddrIndex) == 0 {
+		return nil
+	}
+
 	transfers := make([]userOpERC20Transfer, 0)
 	for _, lg := range logs {
 		if lg == nil || len(lg.Topics) != 3 || lg.Topics[0] != transferEventTopic {
 			continue
 		}
 		token := normalizeAddress(lg.Address.Hex())
-		if len(c.contractAddrIndex) > 0 {
-			if _, tracked := c.contractAddrIndex[token]; !tracked {
-				continue
-			}
+		if _, tracked := c.contractAddrIndex[token]; !tracked {
+			continue
 		}
 		from := common.HexToAddress(lg.Topics[1].Hex()).Hex()
 		to := common.HexToAddress(lg.Topics[2].Hex()).Hex()

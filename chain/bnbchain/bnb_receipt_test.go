@@ -36,6 +36,20 @@ func TestParseUserOpBEP20TransfersFromReceiptReturnsAllWhitelistedTransfers(t *t
 	}
 }
 
+func TestParseUserOpBEP20TransfersFromReceiptRejectsAllWhenTokenWhitelistEmpty(t *testing.T) {
+	usdt := common.HexToAddress("0x55d398326f99059fF775485246999027B3197955")
+	from := common.HexToAddress("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	to := common.HexToAddress("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+
+	c := &ChainAdaptor{}
+	transfers := c.parseUserOpBEP20TransfersFromReceipt([]*types.Log{
+		transferLog(usdt, from, to, big.NewInt(100), 4),
+	})
+	if len(transfers) != 0 {
+		t.Fatalf("len(transfers) = %d, want 0 without token whitelist: %#v", len(transfers), transfers)
+	}
+}
+
 func TestTransferUniqueHashUsesEntryTypeAndIndex(t *testing.T) {
 	got := transferUniqueHash("0xabc", transferEntryTokenLog, 7)
 	want := "0xabc:token_log:7"

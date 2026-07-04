@@ -21,6 +21,7 @@ func TestBuildBlockTransactionsKeepsOriginalHashForDirectBEP20Transfer(t *testin
 	txHash := "0x1111111111111111111111111111111111111111111111111111111111111111"
 
 	c := ChainAdaptor{}
+	c.contractAddrIndex = newContractAddrIndex([]string{token.Hex()})
 	txs := c.buildBlockTransactions(evmbase.TransactionList{
 		From:     from.Hex(),
 		To:       token.Hex(),
@@ -41,6 +42,32 @@ func TestBuildBlockTransactionsKeepsOriginalHashForDirectBEP20Transfer(t *testin
 	}
 	if len(txs[0].To) != 1 || txs[0].To[0].Address != to.Hex() || txs[0].To[0].Amount != "123" {
 		t.Fatalf("to transfer mismatch: %#v", txs[0].To)
+	}
+}
+
+func TestBuildBlockTransactionsDoesNotParseDirectBEP20WhenTokenWhitelistEmpty(t *testing.T) {
+	token := common.HexToAddress("0x55d398326f99059fF775485246999027B3197955")
+	from := common.HexToAddress("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	user := common.HexToAddress("0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+
+	c := ChainAdaptor{}
+	txs := c.buildBlockTransactions(evmbase.TransactionList{
+		From:     from.Hex(),
+		To:       token.Hex(),
+		Hash:     "0x1111111111111111111111111111111111111111111111111111111111111112",
+		Value:    "0",
+		Input:    erc20TransferInput(user, big.NewInt(123)),
+		GasPrice: "7",
+	}, "0xblock", 12)
+
+	if len(txs) != 1 {
+		t.Fatalf("len(txs) = %d, want external fallback transaction", len(txs))
+	}
+	if txs[0].ContractAddress != NativeTokenAddress {
+		t.Fatalf("ContractAddress = %q, want native sentinel", txs[0].ContractAddress)
+	}
+	if len(txs[0].To) != 1 || txs[0].To[0].Address != token.Hex() {
+		t.Fatalf("empty token whitelist must not parse ERC20 recipient into user deposit: %#v", txs[0].To)
 	}
 }
 

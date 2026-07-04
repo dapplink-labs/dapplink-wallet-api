@@ -491,7 +491,7 @@ func (c ChainAdaptor) shouldParseERC20Transfer(blockItem evmbase.TransactionList
 		return false
 	}
 	if len(c.contractAddrIndex) == 0 {
-		return true
+		return false
 	}
 	_, ok := c.contractAddrIndex[normalizeAddress(blockItem.To)]
 	return ok
@@ -642,7 +642,7 @@ func (c ChainAdaptor) GetTransactionByAddress(ctx context.Context, req *walletap
 	var resp *account.TransactionResponse[account.AccountTxResponse]
 	var err error
 	var txType uint32
-	if req.ContractAddress != "0x00" && req.ContractAddress != "" {
+	if !isNativeQueryContractAddress(req.ContractAddress) {
 		resp, err = c.ethDataClient.GetTxByAddress(uint64(req.Page), uint64(req.PageSize), req.Address, "tokentx")
 		txType = 1
 	} else {
@@ -688,7 +688,7 @@ func (c ChainAdaptor) GetTransactionByAddress(ctx context.Context, req *walletap
 }
 
 func (c ChainAdaptor) GetAccountBalance(ctx context.Context, req *walletapi.AccountBalanceRequest) (*walletapi.AccountBalanceResponse, error) {
-	balanceResult, err := c.ethDataClient.GetBalanceByAddress(req.ContractAddress, req.Address)
+	balanceResult, err := c.ethDataClient.GetBalanceByAddress(balanceQueryContractAddress(req.ContractAddress), req.Address)
 	if err != nil {
 		return &walletapi.AccountBalanceResponse{
 			Code:    common2.ReturnCode_ERROR,
@@ -701,11 +701,30 @@ func (c ChainAdaptor) GetAccountBalance(ctx context.Context, req *walletapi.Acco
 	if balanceResult.Balance != nil && balanceResult.Balance.Int() != nil {
 		balanceStr = balanceResult.Balance.Int().String()
 	}
+	return accountBalanceSuccessResponse(balanceStr), nil
+}
+
+func balanceQueryContractAddress(contractAddress string) string {
+	if isNativeQueryContractAddress(contractAddress) {
+		return ""
+	}
+	return contractAddress
+}
+
+func isNativeQueryContractAddress(contractAddress string) bool {
+	normalized := strings.TrimSpace(contractAddress)
+	return normalized == "" ||
+		strings.EqualFold(normalized, "0x00") ||
+		strings.EqualFold(normalized, NativeTokenAddress) ||
+		strings.EqualFold(normalized, evmbase.NativeToken)
+}
+
+func accountBalanceSuccessResponse(balance string) *walletapi.AccountBalanceResponse {
 	return &walletapi.AccountBalanceResponse{
-		Code:    common2.ReturnCode_ERROR,
-		Msg:     "get token balance fail",
-		Balance: balanceStr,
-	}, nil
+		Code:    common2.ReturnCode_SUCCESS,
+		Msg:     "get token balance success",
+		Balance: balance,
+	}
 }
 
 func (c ChainAdaptor) SendTransaction(ctx context.Context, req *walletapi.SendTransactionsRequest) (*walletapi.SendTransactionResponse, error) {
