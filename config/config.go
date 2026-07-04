@@ -14,16 +14,17 @@ type Server struct {
 }
 
 type Node struct {
-	RpcUrl       string   `yaml:"rpc_url"`
-	RpcUser      string   `yaml:"rpc_user"`
-	RpcPass      string   `yaml:"rpc_pass"`
-	DataApiUrl   string   `yaml:"data_api_url"`
-	DataApiKey   string   `yaml:"data_api_key"`
-	DataApiToken string   `yaml:"data_api_token"`
-	ContractAddr []string `yaml:"contract_addr"`
-	TpApiUrl     string   `yaml:"tp_api_url"`
-	TimeOut      uint64   `yaml:"time_out"`
-	AA           AAConfig `yaml:"aa"`
+	RpcUrl        string              `yaml:"rpc_url"`
+	RpcUser       string              `yaml:"rpc_user"`
+	RpcPass       string              `yaml:"rpc_pass"`
+	DataApiUrl    string              `yaml:"data_api_url"`
+	DataApiKey    string              `yaml:"data_api_key"`
+	DataApiToken  string              `yaml:"data_api_token"`
+	ContractAddr  []string            `yaml:"contract_addr"`
+	TpApiUrl      string              `yaml:"tp_api_url"`
+	TimeOut       uint64              `yaml:"time_out"`
+	AA            AAConfig            `yaml:"aa"`
+	DepositPolicy DepositPolicyConfig `yaml:"deposit_policy"`
 }
 
 type AAConfig struct {
@@ -35,6 +36,35 @@ type AAConfig struct {
 	SponsorPrivateKey   string `yaml:"-"`
 	VerifyingPrivateKey string `yaml:"-"`
 	ChainIDNumeric      string `yaml:"chain_id_numeric"`
+}
+
+type DepositPolicyConfig struct {
+	Enabled              bool                `yaml:"enabled"`
+	RejectFailedReceipts bool                `yaml:"reject_failed_receipts"`
+	DirectTransfer       PolicyToggle        `yaml:"direct_transfer"`
+	AAHandleOps          AAHandleOpsPolicy   `yaml:"aa_handle_ops"`
+	RouterReceipt        ReceiptSourcePolicy `yaml:"router_receipt"`
+	BridgeReceipt        ReceiptSourcePolicy `yaml:"bridge_receipt"`
+}
+
+type PolicyToggle struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type AAHandleOpsPolicy struct {
+	Enabled     bool     `yaml:"enabled"`
+	EntryPoints []string `yaml:"entry_points"`
+}
+
+type ReceiptSourcePolicy struct {
+	Enabled        bool                 `yaml:"enabled"`
+	AllowedSources []NamedAddressPolicy `yaml:"allowed_sources"`
+}
+
+type NamedAddressPolicy struct {
+	Name    string `yaml:"name"`
+	Address string `yaml:"address"`
+	Action  string `yaml:"action"`
 }
 
 type WalletNode struct {

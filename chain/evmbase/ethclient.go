@@ -49,6 +49,15 @@ type RpcBlock struct {
 	Timestamp    string            `json:"timestamp"`
 }
 
+type TraceCallFrame struct {
+	Type  string           `json:"type"`
+	From  string           `json:"from"`
+	To    string           `json:"to"`
+	Value string           `json:"value"`
+	Error string           `json:"error"`
+	Calls []TraceCallFrame `json:"calls"`
+}
+
 func (b *RpcBlock) NumberUint64() (uint64, error) {
 	return hexutil.DecodeUint64(b.Number)
 }
@@ -83,6 +92,7 @@ type EthClient interface {
 	GetBalance(address common.Address) (*big.Int, error)
 	GetTransactionAccount(address common.Address) (*big.Int, error)
 	CallContract(msg ethereum.CallMsg) ([]byte, error)
+	TraceTransaction(hash common.Hash) (*TraceCallFrame, error)
 
 	Close()
 }
@@ -415,6 +425,20 @@ func (c *clnt) CallContract(msg ethereum.CallMsg) ([]byte, error) {
 		return nil, fmt.Errorf("eth_call failed: %w", err)
 	}
 	return result, nil
+}
+
+func (c *clnt) TraceTransaction(hash common.Hash) (*TraceCallFrame, error) {
+	ctxwt, cancel := context.WithTimeout(context.Background(), defaultRequestTimeout)
+	defer cancel()
+
+	var result TraceCallFrame
+	err := c.rpc.CallContext(ctxwt, &result, "debug_traceTransaction", hash, map[string]interface{}{
+		"tracer": "callTracer",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("debug_traceTransaction failed: %w", err)
+	}
+	return &result, nil
 }
 
 func (c *clnt) Close() {
