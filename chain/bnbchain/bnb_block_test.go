@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/evmbase"
+	"github.com/dapplink-labs/dapplink-wallet-api/config"
 )
 
 func TestBuildBlockTransactionsKeepsOriginalHashForDirectBEP20Transfer(t *testing.T) {
@@ -64,6 +65,173 @@ func TestBuildBlockTransactionsDoesNotFallbackToExternalWhenAAParsingFails(t *te
 
 	if len(txs) != 0 {
 		t.Fatalf("len(txs) = %d, want 0 when AA receipt and trace parsing fail: %#v", len(txs), txs)
+	}
+}
+
+func TestBuildBlockTransactionsParsesAATokenLogWithLegacyHashSuffix(t *testing.T) {
+	usdt := common.HexToAddress("0x55d398326f99059fF775485246999027B3197955")
+	entryPoint := common.HexToAddress("0x0000000000000000000000000000000000004337")
+	sender := common.HexToAddress("0x1111111111111111111111111111111111111111")
+	user := common.HexToAddress("0x2222222222222222222222222222222222222222")
+	txHash := "0x9999999999999999999999999999999999999999999999999999999999999999"
+
+	c := ChainAdaptor{
+		entryPointAddress: entryPoint,
+		ethClient: &countingEthClient{
+			receipt: &types.Receipt{
+				Status: types.ReceiptStatusSuccessful,
+				Logs:   []*types.Log{transferLog(usdt, sender, user, big.NewInt(1000), 7)},
+			},
+		},
+		contractAddrIndex: newContractAddrIndex([]string{usdt.Hex()}),
+	}
+
+	txs := c.buildBlockTransactions(evmbase.TransactionList{
+		From:     "0x4444444444444444444444444444444444444444",
+		To:       entryPoint.Hex(),
+		Hash:     txHash,
+		Value:    "0",
+		Input:    handleOpsInput(),
+		GasPrice: "7",
+	}, "0xblock", 100)
+
+	if len(txs) != 1 {
+		t.Fatalf("len(txs) = %d, want 1: %#v", len(txs), txs)
+	}
+	if txs[0].TxHash != txHash+":token_log:7" {
+		t.Fatalf("TxHash = %q", txs[0].TxHash)
+	}
+}
+
+func TestBuildBlockTransactionsParsesAllowedRouterReceiptTransfer(t *testing.T) {
+	usdt := common.HexToAddress("0x55d398326f99059fF775485246999027B3197955")
+	fakeToken := common.HexToAddress("0x9999999999999999999999999999999999999999")
+	router := common.HexToAddress("0x1111111111111111111111111111111111111111")
+	user := common.HexToAddress("0x2222222222222222222222222222222222222222")
+	pair := common.HexToAddress("0x3333333333333333333333333333333333333333")
+	txHash := "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+	c := ChainAdaptor{
+		ethClient: &countingEthClient{
+			receipt: &types.Receipt{
+				Status: types.ReceiptStatusSuccessful,
+				Logs: []*types.Log{
+					transferLog(fakeToken, pair, user, big.NewInt(999), 3),
+					transferLog(usdt, pair, user, big.NewInt(1000), 7),
+				},
+			},
+		},
+		contractAddrIndex: newContractAddrIndex([]string{usdt.Hex()}),
+		depositPolicyIndex: newDepositPolicyIndex(config.DepositPolicyConfig{
+			Enabled: true,
+			RouterReceipt: config.ReceiptSourcePolicy{
+				Enabled: true,
+				AllowedSources: []config.NamedAddressPolicy{{
+					Name:    "PancakeSwap Router",
+					Address: router.Hex(),
+					Action:  "accept",
+				}},
+			},
+		}),
+	}
+
+	txs := c.buildBlockTransactions(evmbase.TransactionList{
+		From:     "0x4444444444444444444444444444444444444444",
+		To:       router.Hex(),
+		Hash:     txHash,
+		Value:    "0",
+		Input:    "0x12345678",
+		GasPrice: "7",
+	}, "0xblock", 100)
+
+	if len(txs) != 1 {
+		t.Fatalf("len(txs) = %d, want 1: %#v", len(txs), txs)
+	}
+	if txs[0].TxHash != txHash+":router_token_log:7" {
+		t.Fatalf("TxHash = %q", txs[0].TxHash)
+	}
+	if txs[0].ContractAddress != usdt.Hex() {
+		t.Fatalf("ContractAddress = %q", txs[0].ContractAddress)
+	}
+	if len(txs[0].To) != 1 || txs[0].To[0].Address != user.Hex() || txs[0].To[0].Amount != "1000" {
+		t.Fatalf("to transfer mismatch: %#v", txs[0].To)
+	}
+}
+
+func TestBuildBlockTransactionsSkipsUnknownRouterReceiptTransfer(t *testing.T) {
+	usdt := common.HexToAddress("0x55d398326f99059fF775485246999027B3197955")
+	router := common.HexToAddress("0x1111111111111111111111111111111111111111")
+	user := common.HexToAddress("0x2222222222222222222222222222222222222222")
+	pair := common.HexToAddress("0x3333333333333333333333333333333333333333")
+
+	c := ChainAdaptor{
+		ethClient: &countingEthClient{
+			receipt: &types.Receipt{
+				Status: types.ReceiptStatusSuccessful,
+				Logs:   []*types.Log{transferLog(usdt, pair, user, big.NewInt(1000), 7)},
+			},
+		},
+		contractAddrIndex: newContractAddrIndex([]string{usdt.Hex()}),
+	}
+
+	txs := c.buildBlockTransactions(evmbase.TransactionList{
+		From:     "0x4444444444444444444444444444444444444444",
+		To:       router.Hex(),
+		Hash:     "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		Value:    "0",
+		Input:    "0x12345678",
+		GasPrice: "7",
+	}, "0xblock", 100)
+
+	if len(txs) != 1 {
+		t.Fatalf("len(txs) = %d, want external fallback transaction", len(txs))
+	}
+	if txs[0].TxHash != "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" {
+		t.Fatalf("TxHash = %q", txs[0].TxHash)
+	}
+	if len(txs[0].To) != 1 || txs[0].To[0].Address != router.Hex() {
+		t.Fatalf("unknown router should not parse receipt transfer into user deposit: %#v", txs[0].To)
+	}
+}
+
+func TestBuildBlockTransactionsSkipsFailedRouterReceiptTransfer(t *testing.T) {
+	usdt := common.HexToAddress("0x55d398326f99059fF775485246999027B3197955")
+	router := common.HexToAddress("0x1111111111111111111111111111111111111111")
+	user := common.HexToAddress("0x2222222222222222222222222222222222222222")
+	pair := common.HexToAddress("0x3333333333333333333333333333333333333333")
+
+	c := ChainAdaptor{
+		ethClient: &countingEthClient{
+			receipt: &types.Receipt{
+				Status: types.ReceiptStatusFailed,
+				Logs:   []*types.Log{transferLog(usdt, pair, user, big.NewInt(1000), 7)},
+			},
+		},
+		contractAddrIndex: newContractAddrIndex([]string{usdt.Hex()}),
+		depositPolicyIndex: newDepositPolicyIndex(config.DepositPolicyConfig{
+			Enabled: true,
+			RouterReceipt: config.ReceiptSourcePolicy{
+				Enabled: true,
+				AllowedSources: []config.NamedAddressPolicy{{
+					Name:    "PancakeSwap Router",
+					Address: router.Hex(),
+					Action:  "accept",
+				}},
+			},
+		}),
+	}
+
+	txs := c.buildBlockTransactions(evmbase.TransactionList{
+		From:     "0x4444444444444444444444444444444444444444",
+		To:       router.Hex(),
+		Hash:     "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+		Value:    "0",
+		Input:    "0x12345678",
+		GasPrice: "7",
+	}, "0xblock", 100)
+
+	if len(txs) != 0 {
+		t.Fatalf("len(txs) = %d, want 0 for failed whitelisted router receipt: %#v", len(txs), txs)
 	}
 }
 
@@ -121,6 +289,7 @@ type countingEthClient struct {
 	receiptDelay time.Duration
 	receiptErr   error
 	traceErr     error
+	receipt      *types.Receipt
 
 	mu                    sync.Mutex
 	receiptConcurrency    int
@@ -145,6 +314,9 @@ func (c *countingEthClient) TxReceiptByHash(common.Hash) (*types.Receipt, error)
 
 	if c.receiptErr != nil {
 		return nil, c.receiptErr
+	}
+	if c.receipt != nil {
+		return c.receipt, nil
 	}
 	return &types.Receipt{}, nil
 }

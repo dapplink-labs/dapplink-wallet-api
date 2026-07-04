@@ -21,9 +21,10 @@ type nativeTraceTransfer struct {
 }
 
 const (
-	transferEntryExternal    = "external"
-	transferEntryTokenLog    = "token_log"
-	transferEntryNativeTrace = "native_trace"
+	transferEntryExternal       = "external"
+	transferEntryTokenLog       = "token_log"
+	transferEntryRouterTokenLog = "router_token_log"
+	transferEntryNativeTrace    = "native_trace"
 )
 
 // transferUniqueHash keeps normal chain hashes unchanged, while giving each

@@ -40,12 +40,13 @@ const (
 )
 
 type ChainAdaptor struct {
-	conf              *config.Config
-	ethClient         evmbase.EthClient
-	ethDataClient     *evmbase.EthData
-	contractAddrIndex map[string]struct{}
-	entryPointAddress common.Address
-	sponsorSendMu     sync.Mutex
+	conf               *config.Config
+	ethClient          evmbase.EthClient
+	ethDataClient      *evmbase.EthData
+	contractAddrIndex  map[string]struct{}
+	entryPointAddress  common.Address
+	depositPolicyIndex depositPolicyIndex
+	sponsorSendMu      sync.Mutex
 }
 
 func NewChainAdaptor(conf *config.Config) (chain.IChainAdaptor, error) {
@@ -60,11 +61,12 @@ func NewChainAdaptor(conf *config.Config) (chain.IChainAdaptor, error) {
 		return nil, err
 	}
 	return &ChainAdaptor{
-		conf:              conf,
-		ethClient:         ethClient,
-		ethDataClient:     ethDataClient,
-		contractAddrIndex: newContractAddrIndex(conf.WalletNode.BNB.ContractAddr),
-		entryPointAddress: common.HexToAddress(conf.WalletNode.BNB.AA.EntryPoint),
+		conf:               conf,
+		ethClient:          ethClient,
+		ethDataClient:      ethDataClient,
+		contractAddrIndex:  newContractAddrIndex(conf.WalletNode.BNB.ContractAddr),
+		entryPointAddress:  common.HexToAddress(conf.WalletNode.BNB.AA.EntryPoint),
+		depositPolicyIndex: newDepositPolicyIndex(conf.WalletNode.BNB.DepositPolicy),
 	}, nil
 }
 
@@ -344,9 +346,14 @@ func (c ChainAdaptor) buildBlockTransactions(blockItem evmbase.TransactionList, 
 	if c.isUserOpHandleOps(blockItem) {
 		// The EntryPoint outer transaction is only an AA envelope; deposits must come
 		// from token Transfer logs or native-value trace calls inside the operation.
-		receiptTransfers := c.buildBEP20LogTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
+		receiptTransfers := c.buildBEP20LogTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice, transferEntryTokenLog)
 		nativeTransfers := c.buildNativeTraceTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice)
 		return append(receiptTransfers, nativeTransfers...)
+	}
+	if c.depositPolicyIndex.allowReceiptSource(blockItem.To) {
+		// Whitelisted routers/bridges send the user's final asset through receipt
+		// Transfer logs; the outer tx.to is the contract, not the deposit address.
+		return c.buildBEP20LogTransactions(blockItem, blockHash, blockHeight, blockItem.GasPrice, transferEntryRouterTokenLog)
 	}
 	return []*walletapi.TransactionList{c.buildExternalTransaction(blockItem, blockHash, blockHeight, blockItem.GasPrice)}
 }
@@ -392,7 +399,7 @@ func (c ChainAdaptor) buildExternalTransaction(blockItem evmbase.TransactionList
 	}
 }
 
-func (c ChainAdaptor) buildBEP20LogTransactions(blockItem evmbase.TransactionList, blockHash string, blockHeight uint64, fee string) []*walletapi.TransactionList {
+func (c ChainAdaptor) buildBEP20LogTransactions(blockItem evmbase.TransactionList, blockHash string, blockHeight uint64, fee string, entryType string) []*walletapi.TransactionList {
 	if !c.shouldInspectReceiptTransfers(blockItem) {
 		return nil
 	}
@@ -401,11 +408,15 @@ func (c ChainAdaptor) buildBEP20LogTransactions(blockItem evmbase.TransactionLis
 		log.Warn("fetch receipt for BEP20 transfers failed", "hash", blockItem.Hash, "err", err)
 		return nil
 	}
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		log.Warn("skip failed receipt for BEP20 transfers", "hash", blockItem.Hash, "status", receipt.Status)
+		return nil
+	}
 
 	transfers := c.parseUserOpBEP20TransfersFromReceipt(receipt.Logs)
 	out := make([]*walletapi.TransactionList, 0, len(transfers))
 	for _, transfer := range transfers {
-		out = append(out, transfer.toTransactionList(blockItem.Hash, blockHash, blockHeight, fee))
+		out = append(out, transfer.toTransactionList(blockItem.Hash, blockHash, blockHeight, fee, entryType))
 	}
 	return out
 }
@@ -420,7 +431,7 @@ func (c ChainAdaptor) buildNativeTraceTransactions(blockItem evmbase.Transaction
 }
 
 func (c ChainAdaptor) shouldInspectReceiptTransfers(blockItem evmbase.TransactionList) bool {
-	return c.isUserOpHandleOps(blockItem)
+	return c.isUserOpHandleOps(blockItem) || c.depositPolicyIndex.allowReceiptSource(blockItem.To)
 }
 
 func (c ChainAdaptor) isUserOpHandleOps(blockItem evmbase.TransactionList) bool {
@@ -434,9 +445,9 @@ func (c ChainAdaptor) isUserOpHandleOps(blockItem evmbase.TransactionList) bool 
 	return len(input) >= 8 && strings.EqualFold(input[:8], common.Bytes2Hex(handleOpsSelector))
 }
 
-func (transfer userOpERC20Transfer) toTransactionList(txHash, blockHash string, blockHeight uint64, fee string) *walletapi.TransactionList {
+func (transfer userOpERC20Transfer) toTransactionList(txHash, blockHash string, blockHeight uint64, fee string, entryType string) *walletapi.TransactionList {
 	return &walletapi.TransactionList{
-		TxHash:          transferUniqueHash(txHash, transferEntryTokenLog, transfer.Index),
+		TxHash:          transferUniqueHash(txHash, entryType, transfer.Index),
 		Fee:             fee,
 		Status:          0,
 		TxType:          3,
