@@ -234,7 +234,7 @@ func (c *walletApiGateWayServiceClient) SendSponsoredTransfer(ctx context.Contex
 }
 
 // WalletApiGateWayServiceServer is the server API for WalletApiGateWayService service.
-// All implementations must embed UnimplementedWalletApiGateWayServiceServer
+// All implementations should embed UnimplementedWalletApiGateWayServiceServer
 // for forward compatibility.
 type WalletApiGateWayServiceServer interface {
 	// 链的支持层面
@@ -259,10 +259,9 @@ type WalletApiGateWayServiceServer interface {
 	// EIP-7702 + ERC-4337 sponsored transfer
 	BuildSponsoredTransfer(context.Context, *SponsoredTransferRequest) (*SponsoredTransferBuildResponse, error)
 	SendSponsoredTransfer(context.Context, *SponsoredTransferSendRequest) (*SendTransactionResponse, error)
-	mustEmbedUnimplementedWalletApiGateWayServiceServer()
 }
 
-// UnimplementedWalletApiGateWayServiceServer must be embedded to have
+// UnimplementedWalletApiGateWayServiceServer should be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
@@ -316,8 +315,6 @@ func (UnimplementedWalletApiGateWayServiceServer) BuildSponsoredTransfer(context
 }
 func (UnimplementedWalletApiGateWayServiceServer) SendSponsoredTransfer(context.Context, *SponsoredTransferSendRequest) (*SendTransactionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SendSponsoredTransfer not implemented")
-}
-func (UnimplementedWalletApiGateWayServiceServer) mustEmbedUnimplementedWalletApiGateWayServiceServer() {
 }
 func (UnimplementedWalletApiGateWayServiceServer) testEmbeddedByValue() {}
 

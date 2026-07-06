@@ -285,21 +285,62 @@ func (c ChainAdaptor) buildBlockWithTransactions(rpcBlock *evmbase.RpcBlock) (*w
 		return nil, fmt.Errorf("failed to decode block number: %w", heightErr)
 	}
 
-	txResults := make([]*walletapi.TransactionList, len(rpcBlock.Transactions))
-	var wg sync.WaitGroup
-	for i, blockItem := range rpcBlock.Transactions {
-		wg.Add(1)
-		go func(index int, tx evmbase.TransactionList) {
-			defer wg.Done()
-			txResults[index] = c.buildBlockTransaction(tx, rpcBlock.Hash.String(), blockHeight)
-		}(i, blockItem)
-	}
-	wg.Wait()
+	transactionList := make([]*walletapi.TransactionList, 0, len(rpcBlock.Transactions))
+	outerKeys := make(map[string]struct{}, len(rpcBlock.Transactions))
 
-	transactionList := make([]*walletapi.TransactionList, 0, len(txResults))
-	for _, txItem := range txResults {
-		if txItem != nil {
-			transactionList = append(transactionList, txItem)
+	for _, blockItem := range rpcBlock.Transactions {
+		txItem := c.buildBlockTransaction(blockItem, rpcBlock.Hash.String(), blockHeight)
+		if txItem == nil {
+			continue
+		}
+		txItem.TransferKind = transferKindOuter
+		txItem.LogIndex = 0
+		transactionList = append(transactionList, txItem)
+		outerKeys[outerTransferKey(txItem)] = struct{}{}
+	}
+
+	blockNumber, err := rpcBlock.NumberUint64()
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode block number for receipts: %w", err)
+	}
+	receipts, receiptErr := c.ethClient.BlockReceiptsByNumber(new(big.Int).SetUint64(blockNumber))
+	if receiptErr != nil {
+		log.Warn("fetch block receipts failed, skip inner ERC20 expansion", "number", rpcBlock.Number, "err", receiptErr)
+	} else {
+		for _, receipt := range receipts {
+			if receipt == nil || receipt.Status != types.ReceiptStatusSuccessful {
+				continue
+			}
+			transfers := c.parseERC20TransfersFromReceipt(receipt.Logs)
+			fee := receiptFeeString(receipt)
+			status := receiptStatusValue(receipt)
+			txHash := receipt.TxHash.Hex()
+			for _, transfer := range transfers {
+				key := transferDedupKey(txHash, transfer.Contract, transfer.From, transfer.To, transfer.Amount)
+				if _, exists := outerKeys[key]; exists {
+					continue
+				}
+				outerKeys[key] = struct{}{}
+				transactionList = append(transactionList, &walletapi.TransactionList{
+					TxHash:          txHash,
+					Fee:             fee,
+					Status:          status,
+					TxType:          3,
+					ContractAddress: transfer.Contract,
+					From: []*walletapi.FromAddress{{
+						Address: transfer.From,
+						Amount:  transfer.Amount,
+					}},
+					To: []*walletapi.ToAddress{{
+						Address: transfer.To,
+						Amount:  transfer.Amount,
+					}},
+					BlockHash:    rpcBlock.Hash.String(),
+					BlockHeight:  blockHeight,
+					LogIndex:     transfer.LogIndex,
+					TransferKind: transferKindReceiptERC20,
+				})
+			}
 		}
 	}
 
@@ -315,6 +356,26 @@ func (c ChainAdaptor) buildBlockWithTransactions(rpcBlock *evmbase.RpcBlock) (*w
 		Timestamp:    timestamp,
 		Transactions: transactionList,
 	}, nil
+}
+
+func outerTransferKey(tx *walletapi.TransactionList) string {
+	if tx == nil {
+		return ""
+	}
+	from := ""
+	to := ""
+	amount := ""
+	if len(tx.GetFrom()) > 0 {
+		from = tx.GetFrom()[0].GetAddress()
+		amount = tx.GetFrom()[0].GetAmount()
+	}
+	if len(tx.GetTo()) > 0 {
+		to = tx.GetTo()[0].GetAddress()
+		if amount == "" {
+			amount = tx.GetTo()[0].GetAmount()
+		}
+	}
+	return transferDedupKey(tx.GetTxHash(), tx.GetContractAddress(), from, to, amount)
 }
 
 func (c ChainAdaptor) buildBlockTransaction(blockItem evmbase.TransactionList, blockHash string, blockHeight uint64) *walletapi.TransactionList {
@@ -338,12 +399,6 @@ func (c ChainAdaptor) buildBlockTransaction(blockItem evmbase.TransactionList, b
 			toAddress = parsedTo
 			amount = parsedAmount
 		}
-	} else if transfer, parsed := c.tryParseUserOpERC20Transfer(blockItem); parsed {
-		txType = 3
-		contractAddress = transfer.Contract
-		fromAddress = transfer.From
-		toAddress = transfer.To
-		amount = transfer.Amount
 	}
 
 	fromList := []*walletapi.FromAddress{{

@@ -1004,6 +1004,8 @@ type TransactionList struct {
 	To              []*ToAddress           `protobuf:"bytes,7,rep,name=to,proto3" json:"to,omitempty"`
 	BlockHash       string                 `protobuf:"bytes,8,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"`
 	BlockHeight     uint64                 `protobuf:"varint,9,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	LogIndex        uint32                 `protobuf:"varint,10,opt,name=log_index,json=logIndex,proto3" json:"log_index,omitempty"`
+	TransferKind    string                 `protobuf:"bytes,11,opt,name=transfer_kind,json=transferKind,proto3" json:"transfer_kind,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1099,6 +1101,20 @@ func (x *TransactionList) GetBlockHeight() uint64 {
 		return x.BlockHeight
 	}
 	return 0
+}
+
+func (x *TransactionList) GetLogIndex() uint32 {
+	if x != nil {
+		return x.LogIndex
+	}
+	return 0
+}
+
+func (x *TransactionList) GetTransferKind() string {
+	if x != nil {
+		return x.TransferKind
+	}
+	return ""
 }
 
 type BlockRequest struct {
@@ -3307,7 +3323,7 @@ const file_dapplink_walletapi_proto_rawDesc = "" +
 	"\tToAddress\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x16\n" +
 	"\x06amount\x18\x02 \x01(\tR\x06amount\x12\x1b\n" +
-	"\tmeta_data\x18\x03 \x01(\tR\bmetaData\"\xa9\x02\n" +
+	"\tmeta_data\x18\x03 \x01(\tR\bmetaData\"\xeb\x02\n" +
 	"\x0fTransactionList\x12\x17\n" +
 	"\atx_hash\x18\x01 \x01(\tR\x06txHash\x12\x10\n" +
 	"\x03fee\x18\x02 \x01(\tR\x03fee\x12\x16\n" +
@@ -3318,7 +3334,10 @@ const file_dapplink_walletapi_proto_rawDesc = "" +
 	"\x02to\x18\a \x03(\v2\x13.dapplink.ToAddressR\x02to\x12\x1d\n" +
 	"\n" +
 	"block_hash\x18\b \x01(\tR\tblockHash\x12!\n" +
-	"\fblock_height\x18\t \x01(\x04R\vblockHeight\"\xaf\x01\n" +
+	"\fblock_height\x18\t \x01(\x04R\vblockHeight\x12\x1b\n" +
+	"\tlog_index\x18\n" +
+	" \x01(\rR\blogIndex\x12#\n" +
+	"\rtransfer_kind\x18\v \x01(\tR\ftransferKind\"\xaf\x01\n" +
 	"\fBlockRequest\x12%\n" +
 	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\tR\achainId\x12\x18\n" +

@@ -79,6 +79,7 @@ type EthClient interface {
 	SendRawTransaction(rawTx string) (*common.Hash, error)
 	TxByHash(common.Hash) (*types.Transaction, error)
 	TxReceiptByHash(common.Hash) (*types.Receipt, error)
+	BlockReceiptsByNumber(*big.Int) ([]*types.Receipt, error)
 	EthGetCode(common.Address) (string, error)
 	GetBalance(address common.Address) (*big.Int, error)
 	GetTransactionAccount(address common.Address) (*big.Int, error)
@@ -356,6 +357,39 @@ func (c *clnt) TxReceiptByHash(hash common.Hash) (*types.Receipt, error) {
 	}
 
 	return txReceipt, nil
+}
+
+func (c *clnt) BlockReceiptsByNumber(number *big.Int) ([]*types.Receipt, error) {
+	ctxwt, cancel := context.WithTimeout(context.Background(), defaultBatchRequestTimeout)
+	defer cancel()
+
+	var receipts []*types.Receipt
+	err := c.rpc.CallContext(ctxwt, &receipts, "eth_getBlockReceipts", toBlockNumArg(number))
+	if err == nil && len(receipts) > 0 {
+		return receipts, nil
+	}
+
+	block, blockErr := c.BlockByNumber(number)
+	if blockErr != nil {
+		if err != nil {
+			return nil, err
+		}
+		return nil, blockErr
+	}
+
+	out := make([]*types.Receipt, 0, len(block.Transactions))
+	for _, txItem := range block.Transactions {
+		if txItem.Hash == "" {
+			continue
+		}
+		receipt, receiptErr := c.TxReceiptByHash(common.HexToHash(txItem.Hash))
+		if receiptErr != nil {
+			log.Warn("fetch receipt while expanding block receipts", "hash", txItem.Hash, "err", receiptErr)
+			continue
+		}
+		out = append(out, receipt)
+	}
+	return out, nil
 }
 
 func (c *clnt) EthGetCode(account common.Address) (string, error) {

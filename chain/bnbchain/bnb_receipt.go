@@ -12,10 +12,23 @@ import (
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/evmbase"
 )
 
+const (
+	transferKindOuter        = "outer"
+	transferKindReceiptERC20 = "receipt_erc20"
+)
+
 var (
 	transferEventTopic = crypto.Keccak256Hash([]byte("Transfer(address,address,uint256)"))
 	handleOpsSelector  = crypto.Keccak256([]byte("handleOps((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes)[],address)"))[:4]
 )
+
+type erc20TransferLog struct {
+	Contract string
+	From     string
+	To       string
+	Amount   string
+	LogIndex uint32
+}
 
 type userOpERC20Transfer struct {
 	Contract string
@@ -42,10 +55,20 @@ func (c *ChainAdaptor) tryParseUserOpERC20Transfer(blockItem evmbase.Transaction
 		return userOpERC20Transfer{}, false
 	}
 
-	return c.parseUserOpERC20TransferFromReceipt(receipt.Logs)
+	transfer, ok := c.firstERC20TransferFromReceipt(receipt.Logs)
+	if !ok {
+		return userOpERC20Transfer{}, false
+	}
+	return userOpERC20Transfer{
+		Contract: transfer.Contract,
+		From:     transfer.From,
+		To:       transfer.To,
+		Amount:   transfer.Amount,
+	}, true
 }
 
-func (c *ChainAdaptor) parseUserOpERC20TransferFromReceipt(logs []*types.Log) (userOpERC20Transfer, bool) {
+func (c *ChainAdaptor) parseERC20TransfersFromReceipt(logs []*types.Log) []erc20TransferLog {
+	out := make([]erc20TransferLog, 0, len(logs))
 	for _, lg := range logs {
 		if lg == nil || len(lg.Topics) != 3 || lg.Topics[0] != transferEventTopic {
 			continue
@@ -59,12 +82,47 @@ func (c *ChainAdaptor) parseUserOpERC20TransferFromReceipt(logs []*types.Log) (u
 		from := common.HexToAddress(lg.Topics[1].Hex()).Hex()
 		to := common.HexToAddress(lg.Topics[2].Hex()).Hex()
 		value := new(big.Int).SetBytes(lg.Data)
-		return userOpERC20Transfer{
+		if value.Sign() <= 0 {
+			continue
+		}
+		out = append(out, erc20TransferLog{
 			Contract: lg.Address.Hex(),
 			From:     from,
 			To:       to,
 			Amount:   value.String(),
-		}, true
+			LogIndex: uint32(lg.Index),
+		})
 	}
-	return userOpERC20Transfer{}, false
+	return out
+}
+
+func (c *ChainAdaptor) firstERC20TransferFromReceipt(logs []*types.Log) (erc20TransferLog, bool) {
+	transfers := c.parseERC20TransfersFromReceipt(logs)
+	if len(transfers) == 0 {
+		return erc20TransferLog{}, false
+	}
+	return transfers[0], true
+}
+
+func transferDedupKey(txHash, contractAddress, fromAddress, toAddress, amount string) string {
+	return strings.ToLower(strings.TrimSpace(txHash)) + "|" +
+		normalizeAddress(contractAddress) + "|" +
+		normalizeAddress(fromAddress) + "|" +
+		normalizeAddress(toAddress) + "|" +
+		strings.TrimSpace(amount)
+}
+
+func receiptFeeString(receipt *types.Receipt) string {
+	if receipt == nil {
+		return "0"
+	}
+	fee := new(big.Int).Mul(new(big.Int).SetUint64(receipt.GasUsed), receipt.EffectiveGasPrice)
+	return fee.String()
+}
+
+func receiptStatusValue(receipt *types.Receipt) uint32 {
+	if receipt == nil || receipt.Status != types.ReceiptStatusSuccessful {
+		return 0
+	}
+	return 1
 }
