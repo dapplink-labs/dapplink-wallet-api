@@ -1,0 +1,8 @@
+.git
+.idea
+wallet-api
+config-local.yml
+config.prod.yml
+.env
+.env.prod
+
