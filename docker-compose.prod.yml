@@ -15,7 +15,7 @@ services:
     env_file:
       - .env.prod
     ports:
-      - "127.0.0.1:3002:3000"
+      - "127.0.0.1:3006:3000"
     volumes:
       - ./config.prod.yml:/etc/dapplink-wallet-api/config.yml:ro
 
