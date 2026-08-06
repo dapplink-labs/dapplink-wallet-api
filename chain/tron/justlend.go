@@ -6,13 +6,13 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/log"
 	base582 "github.com/btcsuite/btcutil/base58"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const (
 	DefaultJustLendContractMainnet = "TU2MJ5Veik1LRAgjeSzEdvmDYx7mefJZvd"
-	justLendResourceTypeEnergy       = 1
+	justLendResourceTypeEnergy     = 1
 
 	rentResourceMethodSelector   = "fd8527a1"
 	returnResourceMethodSelector = "af6f4896"
