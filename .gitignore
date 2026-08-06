@@ -26,10 +26,13 @@ go.work.sum
 
 # env file
 .env
+.env.prod
+config.prod.yml
 
 # Editor/IDE
 .idea/
 # .vscode/
 wallet-api
 config_local.yml
+
 

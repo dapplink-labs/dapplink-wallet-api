@@ -1,0 +1,21 @@
+services:
+  dapplink-wallet-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CONFIG: config.prod.example.yml
+    image: dapplink-wallet-api:latest
+    container_name: dapplink-wallet-api
+    restart: unless-stopped
+    command:
+      - rpc
+      - -c
+      - /etc/dapplink-wallet-api/config.yml
+    env_file:
+      - .env.prod
+    ports:
+      - "127.0.0.1:3006:3000"
+    volumes:
+      - ./config.prod.yml:/etc/dapplink-wallet-api/config.yml:ro
+
