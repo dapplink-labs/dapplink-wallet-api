@@ -60,8 +60,25 @@ func (c ChainAdaptor) ConvertAddresses(ctx context.Context, req *walletapi.Conve
 	var addressList []*walletapi.Addresses
 	for _, publicKeyItem := range req.GetPublicKey() {
 		var walletAddress walletapi.Addresses
-		compressedPubKeyBytes, _ := hex.DecodeString(publicKeyItem.PublicKey)
-		pubKeyHash := btcutil.Hash160(compressedPubKeyBytes)
+		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(publicKeyItem.PublicKey, "0x"))
+		if err != nil {
+			log.Error("decode public key fail", "err", err, "publicKey", publicKeyItem.PublicKey)
+			addressList = append(addressList, &walletapi.Addresses{
+				Type:      publicKeyItem.Type,
+				PublicKey: publicKeyItem.PublicKey,
+			})
+			continue
+		}
+		pubKey, err := btcec.ParsePubKey(pubKeyBytes)
+		if err != nil {
+			log.Error("parse public key fail", "err", err, "publicKey", publicKeyItem.PublicKey)
+			addressList = append(addressList, &walletapi.Addresses{
+				Type:      publicKeyItem.Type,
+				PublicKey: publicKeyItem.PublicKey,
+			})
+			continue
+		}
+		pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
 
 		walletAddress.Type = publicKeyItem.Type
 		walletAddress.PublicKey = publicKeyItem.PublicKey
@@ -101,11 +118,6 @@ func (c ChainAdaptor) ConvertAddresses(ctx context.Context, req *walletapi.Conve
 			}
 			break
 		case "p2tr":
-			pubKey, err := btcec.ParsePubKey(compressedPubKeyBytes)
-			if err != nil {
-				log.Error("parse p2tr public fail", "err", err)
-				walletAddress.Address = ""
-			}
 			taprootPubKey := schnorr.SerializePubKey(pubKey)
 			taprootAddr, err := btcutil.NewAddressTaproot(taprootPubKey, &chaincfg.MainNetParams)
 			if err != nil {

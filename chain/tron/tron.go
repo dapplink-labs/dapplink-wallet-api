@@ -24,11 +24,25 @@ import (
 const (
 	ChainID   string = "DappLinkTron"
 	ChainName string = "Tron"
+
+	justLendRentalQueryPrefix = "__justlend_rental__"
 )
+
+func parseJustLendRentalQuery(contractAddress string) (renter string, isRentalQuery bool) {
+	trimmed := strings.TrimSpace(contractAddress)
+	if !strings.HasPrefix(strings.ToLower(trimmed), justLendRentalQueryPrefix) {
+		return "", false
+	}
+	if len(trimmed) > len(justLendRentalQueryPrefix)+1 && trimmed[len(justLendRentalQueryPrefix)] == '|' {
+		return strings.TrimSpace(trimmed[len(justLendRentalQueryPrefix)+1:]), true
+	}
+	return "", true
+}
 
 type ChainAdaptor struct {
 	tronClient     *TronClient
 	tronDataClient *TronData
+	sponsor        config.TronSponsor
 }
 
 func NewChainAdaptor(conf *config.Config) (chain.IChainAdaptor, error) {
@@ -39,9 +53,20 @@ func NewChainAdaptor(conf *config.Config) (chain.IChainAdaptor, error) {
 		log.Error("new tron data client fail", "err", err)
 		return nil, err
 	}
+	sponsor := rpc.Sponsor
+	if sponsor.ActivationTransferSun <= 0 {
+		sponsor.ActivationTransferSun = defaultActivationTransferSun
+	}
+	if sponsor.DelegateBalanceSun <= 0 {
+		sponsor.DelegateBalanceSun = defaultDelegateBalanceSun
+	}
+	if sponsor.EstimatedEnergy <= 0 {
+		sponsor.EstimatedEnergy = defaultEstimatedEnergy
+	}
 	return &ChainAdaptor{
 		tronClient:     tronClient,
 		tronDataClient: tronDataClient,
+		sponsor:        sponsor,
 	}, nil
 }
 
@@ -115,7 +140,7 @@ func (c *ChainAdaptor) GetLastestBlock(ctx context.Context, req *walletapi.Laste
 		Height:     uint64(blockResp.BlockHeader.RawData.Number),
 		Hash:       blockResp.BlockID,
 		ParentHash: blockResp.BlockHeader.RawData.ParentHash,
-		Timestamp:  uint64(blockResp.BlockHeader.RawData.Timestamp),
+		Timestamp:  blockTimestampSeconds(blockResp.BlockHeader.RawData.Timestamp),
 	}, nil
 }
 
@@ -130,83 +155,73 @@ func (c *ChainAdaptor) GetBlock(ctx context.Context, req *walletapi.BlockRequest
 	}
 	var txList []*walletapi.TransactionList
 	if blockResp.Transactions != nil {
-		for _, tx := range blockResp.Transactions {
-			var fromAddrs []*walletapi.FromAddress
-			var toAddrs []*walletapi.ToAddress
-			var contractAddress string
-			var txType uint32
-			if len(tx.RawData.Contract) > 0 {
-				contract := tx.RawData.Contract[0]
-				switch contract.Type {
-				case "TransferContract": // Native TRX transfer
-					txType = 1
-					if contract.Parameter.Value.OwnerAddress != "" {
-						fromAddr := HexToTronAddress(contract.Parameter.Value.OwnerAddress)
-						fromAddrs = append(fromAddrs, &walletapi.FromAddress{
-							Address: fromAddr,
-							Amount:  strconv.FormatInt(contract.Parameter.Value.Amount, 10),
-						})
-					}
-					if contract.Parameter.Value.ToAddress != "" {
-						toAddr := HexToTronAddress(contract.Parameter.Value.ToAddress)
-						toAddrs = append(toAddrs, &walletapi.ToAddress{
-							Address: toAddr,
-							Amount:  strconv.FormatInt(contract.Parameter.Value.Amount, 10),
-						})
-					}
-				case "TriggerSmartContract": // TRC20 Token transfer
-					txType = 2
-					if contract.Parameter.Value.ContractAddress != "" {
-						contractAddress = HexToTronAddress(contract.Parameter.Value.ContractAddress)
-					}
-					if contract.Parameter.Value.OwnerAddress != "" {
-						fromAddr := HexToTronAddress(contract.Parameter.Value.OwnerAddress)
-						fromAddrs = append(fromAddrs, &walletapi.FromAddress{
-							Address: fromAddr,
-						})
-					}
-					if contract.Parameter.Value.Data != "" {
-						data := contract.Parameter.Value.Data
-						if len(data) >= 136 && strings.HasPrefix(data, "a9059cbb") {
-							toAddrHex := "41" + data[32:72]
-							toAddr := HexToTronAddress(toAddrHex)
-							amountHex := data[72:136]
-							amount := "0"
-							if amountBig, ok := new(big.Int).SetString(amountHex, 16); ok {
-								amount = amountBig.String()
-							}
-							fromAddrs[0].Amount = amount
-							toAddrs = append(toAddrs, &walletapi.ToAddress{
-								Address: toAddr,
-								Amount:  amount,
-							})
-						}
-					}
-				}
-			}
-			transaction := &walletapi.TransactionList{
-				TxHash:          tx.TxID,
-				From:            fromAddrs,
-				To:              toAddrs,
-				ContractAddress: contractAddress,
-				TxType:          txType,
-			}
-			txList = append(txList, transaction)
-		}
+		txList = parseBlockTransactions(blockResp)
 	}
 	return &walletapi.BlockResponse{
 		Code:         common.ReturnCode_SUCCESS,
 		Msg:          "success",
 		Height:       strconv.FormatInt(blockResp.BlockHeader.RawData.Number, 10),
 		Hash:         blockResp.BlockID,
+		ParentHash:   blockResp.BlockHeader.RawData.ParentHash,
+		Timestamp:    blockTimestampSeconds(blockResp.BlockHeader.RawData.Timestamp),
 		Transactions: txList,
 	}, nil
 }
 
 func (c *ChainAdaptor) GetBatchBlock(ctx context.Context, req *walletapi.BatchBlockRequest) (*walletapi.BatchBlockResponse, error) {
+	startHeight, err := strconv.ParseInt(req.NextHeight, 10, 64)
+	if err != nil {
+		return &walletapi.BatchBlockResponse{Code: common.ReturnCode_ERROR, Msg: "invalid next height"}, nil
+	}
+	endHeight, err := strconv.ParseInt(req.EndHeight, 10, 64)
+	if err != nil {
+		return &walletapi.BatchBlockResponse{Code: common.ReturnCode_ERROR, Msg: "invalid end height"}, nil
+	}
+	if startHeight > endHeight {
+		return &walletapi.BatchBlockResponse{Code: common.ReturnCode_ERROR, Msg: "next height is greater than end height"}, nil
+	}
+
+	if !req.WithTransactions {
+		headers := make([]*walletapi.BlockHeaderInfo, 0, endHeight-startHeight+1)
+		for height := startHeight; height <= endHeight; height++ {
+			blockResp, blockErr := c.tronClient.GetBlockByNumber(height)
+			if blockErr != nil {
+				log.Error("get block header fail", "height", height, "err", blockErr)
+				return &walletapi.BatchBlockResponse{Code: common.ReturnCode_ERROR, Msg: blockErr.Error()}, nil
+			}
+			headers = append(headers, &walletapi.BlockHeaderInfo{
+				Height:     strconv.FormatInt(blockResp.BlockHeader.RawData.Number, 10),
+				Hash:       blockResp.BlockID,
+				ParentHash: blockResp.BlockHeader.RawData.ParentHash,
+				Timestamp:  blockTimestampSeconds(blockResp.BlockHeader.RawData.Timestamp),
+			})
+		}
+		return &walletapi.BatchBlockResponse{
+			Code:    common.ReturnCode_SUCCESS,
+			Msg:     "get batch block success",
+			Headers: headers,
+		}, nil
+	}
+
+	blocks := make([]*walletapi.BlockWithTransactions, 0, endHeight-startHeight+1)
+	for height := startHeight; height <= endHeight; height++ {
+		blockResp, blockErr := c.tronClient.GetBlockByNumber(height)
+		if blockErr != nil {
+			log.Error("get batch block fail", "height", height, "err", blockErr)
+			return &walletapi.BatchBlockResponse{Code: common.ReturnCode_ERROR, Msg: blockErr.Error()}, nil
+		}
+		blocks = append(blocks, &walletapi.BlockWithTransactions{
+			Height:       strconv.FormatInt(blockResp.BlockHeader.RawData.Number, 10),
+			Hash:         blockResp.BlockID,
+			ParentHash:   blockResp.BlockHeader.RawData.ParentHash,
+			Timestamp:    blockTimestampSeconds(blockResp.BlockHeader.RawData.Timestamp),
+			Transactions: parseBlockTransactions(blockResp),
+		})
+	}
 	return &walletapi.BatchBlockResponse{
-		Code: common.ReturnCode_ERROR,
-		Msg:  "batch block query is not supported",
+		Code:   common.ReturnCode_SUCCESS,
+		Msg:    "get batch block success",
+		Blocks: blocks,
 	}, nil
 }
 
@@ -282,6 +297,7 @@ func (c *ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.
 			To:              toAddrs,
 			ContractAddress: contractAddress,
 			TxType:          txType,
+			Status:          contractRetStatus(tx),
 		},
 	}, nil
 }
@@ -314,8 +330,93 @@ func (c *ChainAdaptor) GetTransactionByAddress(ctx context.Context, req *walleta
 }
 
 func (c *ChainAdaptor) GetAccountBalance(ctx context.Context, req *walletapi.AccountBalanceRequest) (*walletapi.AccountBalanceResponse, error) {
+	if strings.EqualFold(strings.TrimSpace(req.ContractAddress), "__activated__") {
+		activated, err := c.tronClient.IsAccountActivated(req.Address)
+		if err != nil {
+			return &walletapi.AccountBalanceResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		balance := "0"
+		if activated {
+			balance = "1"
+		}
+		return &walletapi.AccountBalanceResponse{
+			Code:    common.ReturnCode_SUCCESS,
+			Msg:     "success",
+			Balance: balance,
+		}, nil
+	}
+	if strings.EqualFold(strings.TrimSpace(req.ContractAddress), "__resource__") {
+		resource, err := c.tronClient.GetAccountResource(req.Address)
+		if err != nil {
+			return &walletapi.AccountBalanceResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		available := resource.EnergyLimit - resource.EnergyUsed
+		if available < 0 {
+			available = 0
+		}
+		return &walletapi.AccountBalanceResponse{
+			Code:    common.ReturnCode_SUCCESS,
+			Msg:     "success",
+			Balance: strconv.FormatInt(available, 10),
+		}, nil
+	}
+	if strings.EqualFold(strings.TrimSpace(req.ContractAddress), "__bandwidth__") {
+		resource, err := c.tronClient.GetAccountResource(req.Address)
+		if err != nil {
+			return &walletapi.AccountBalanceResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		freeAvailable := resource.FreeNetLimit - resource.FreeNetUsed
+		if freeAvailable < 0 {
+			freeAvailable = 0
+		}
+		netAvailable := resource.NetLimit - resource.NetUsed
+		if netAvailable < 0 {
+			netAvailable = 0
+		}
+		return &walletapi.AccountBalanceResponse{
+			Code:    common.ReturnCode_SUCCESS,
+			Msg:     "success",
+			Balance: strconv.FormatInt(freeAvailable+netAvailable, 10),
+		}, nil
+	}
+	if renterOverride, isRentalQuery := parseJustLendRentalQuery(req.ContractAddress); isRentalQuery {
+		renter := renterOverride
+		if renter == "" {
+			renter = strings.TrimSpace(c.sponsor.Address)
+		}
+		if renter == "" {
+			return &walletapi.AccountBalanceResponse{
+				Code: common.ReturnCode_ERROR,
+				Msg:  "tron sponsor address is not configured",
+			}, nil
+		}
+		contract := strings.TrimSpace(c.sponsor.JustLendContract)
+		if contract == "" {
+			contract = DefaultJustLendContractMainnet
+		}
+		delegatedSun, err := c.tronClient.QueryJustLendRentalDelegatedSun(renter, req.Address, contract)
+		if err != nil {
+			return &walletapi.AccountBalanceResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		return &walletapi.AccountBalanceResponse{
+			Code:    common.ReturnCode_SUCCESS,
+			Msg:     "success",
+			Balance: strconv.FormatInt(delegatedSun, 10),
+		}, nil
+	}
+	if strings.EqualFold(strings.TrimSpace(req.ContractAddress), "__delegatable__") {
+		maxSize, err := c.tronClient.GetCanDelegatedMaxSize(req.Address, 1)
+		if err != nil {
+			return &walletapi.AccountBalanceResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		return &walletapi.AccountBalanceResponse{
+			Code:    common.ReturnCode_SUCCESS,
+			Msg:     "success",
+			Balance: strconv.FormatInt(maxSize, 10),
+		}, nil
+	}
 	if req.ContractAddress == "" {
-		account, err := c.tronClient.GetBalance(req.Address)
+		account, err := c.tronClient.GetAccount(req.Address)
 		if err != nil {
 			log.Error("get account fail", "err", err)
 			return &walletapi.AccountBalanceResponse{
@@ -328,19 +429,46 @@ func (c *ChainAdaptor) GetAccountBalance(ctx context.Context, req *walletapi.Acc
 			Msg:     "success",
 			Balance: strconv.FormatInt(account.Balance, 10),
 		}, nil
-	} else {
+	}
+	balance, err := c.tronClient.GetTRC20Balance(req.Address, req.ContractAddress)
+	if err != nil {
+		log.Error("get trc20 balance fail", "err", err)
 		return &walletapi.AccountBalanceResponse{
 			Code: common.ReturnCode_ERROR,
-			Msg:  "TRC20 balance query not implemented yet",
-		}, nil
+			Msg:  err.Error(),
+		}, err
 	}
+	return &walletapi.AccountBalanceResponse{
+		Code:    common.ReturnCode_SUCCESS,
+		Msg:     "success",
+		Balance: balance,
+	}, nil
 }
 
 func (c *ChainAdaptor) SendTransaction(ctx context.Context, req *walletapi.SendTransactionsRequest) (*walletapi.SendTransactionResponse, error) {
 	var txnRetList []*walletapi.RawTransactionReturn
 	for _, rawTx := range req.RawTx {
+		txBytes, err := base64.StdEncoding.DecodeString(rawTx.RawTx)
+		if err != nil {
+			log.Error("decode signed tx fail", "err", err)
+			txnRetList = append(txnRetList, &walletapi.RawTransactionReturn{TxHash: "", IsSuccess: false})
+			continue
+		}
+		var transaction Transaction
+		if err := json.Unmarshal(txBytes, &transaction); err != nil {
+			log.Error("unmarshal signed tx fail", "err", err)
+			txnRetList = append(txnRetList, &walletapi.RawTransactionReturn{TxHash: "", IsSuccess: false})
+			continue
+		}
+		txHash, err := c.tronClient.BroadcastTransaction(&transaction)
+		if err != nil {
+			log.Error("broadcast transaction fail", "err", err)
+			txnRetList = append(txnRetList, &walletapi.RawTransactionReturn{TxHash: "", IsSuccess: false})
+			continue
+		}
 		txnRetList = append(txnRetList, &walletapi.RawTransactionReturn{
-			TxHash: rawTx.RawTx,
+			TxHash:    txHash,
+			IsSuccess: true,
 		})
 	}
 	return &walletapi.SendTransactionResponse{
@@ -371,11 +499,7 @@ func (c *ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *wall
 			return nil, err
 		}
 		var transaction *Transaction
-		if data.ContractAddress == "" {
-			transaction, err = c.tronClient.CreateTRXTransaction(data.FromAddress, data.ToAddress, data.Value)
-		} else {
-			transaction, err = c.tronClient.CreateTRC20Transaction(data.FromAddress, data.ToAddress, data.ContractAddress, data.Value)
-		}
+		transaction, err = buildUnsignedTransaction(c.tronClient, data)
 		if err != nil {
 			log.Error("create transaction fail", "err", err)
 			return nil, err
@@ -430,7 +554,7 @@ func (c *ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *wall
 			})
 			continue
 		}
-		signatureHex := hex.EncodeToString(signatureBytes)
+		signatureHex := formatTronSignatureHex(hex.EncodeToString(signatureBytes))
 		transaction.Signature = []string{signatureHex}
 		if transaction.TxID == "" {
 			if transaction.RawDataHex != "" {

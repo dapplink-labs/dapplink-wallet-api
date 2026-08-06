@@ -86,6 +86,15 @@ type AccountResource struct {
 	EnergyWindowOptimized                     bool  `json:"energy_window_optimized"`
 }
 
+type AccountResourceResponse struct {
+	FreeNetUsed  int64 `json:"freeNetUsed"`
+	FreeNetLimit int64 `json:"freeNetLimit"`
+	NetUsed      int64 `json:"NetUsed"`
+	NetLimit     int64 `json:"NetLimit"`
+	EnergyUsed   int64 `json:"EnergyUsed"`
+	EnergyLimit  int64 `json:"EnergyLimit"`
+}
+
 type Permission struct {
 	Type           string `json:"type,omitempty"`
 	ID             int    `json:"id,omitempty"`
@@ -146,16 +155,23 @@ type Value struct {
 }
 
 type TxStructure struct {
+	TxKind          string `json:"tx_kind"`
 	ContractAddress string `json:"contract_address"`
 	FromAddress     string `json:"from_address"`
 	ToAddress       string `json:"to_address"`
 	Value           int64  `json:"value"`
+	DelegateBalance int64  `json:"delegate_balance"`
+	Resource        string `json:"resource"`
+	EnergyAmount    int64  `json:"energy_amount,omitempty"`
+	RentCallValue   int64  `json:"rent_call_value,omitempty"`
 }
 
 type BroadcastReturns struct {
 	Code    string `json:"code"`
 	Txid    string `json:"txid"`
 	Message string `json:"message"`
+	Error   string `json:"Error"`
+	Result  bool   `json:"result"`
 }
 
 type JSONRPCResponse struct {
@@ -243,10 +259,13 @@ type Parameter struct {
 }
 
 type ContractValue struct {
-	OwnerAddress    string `json:"owner_address"`
-	ToAddress       string `json:"to_address"`
-	Amount          int64  `json:"amount"`
-	ContractAddress string `json:"contract_address"`
-	Data            string `json:"data"`
-	AssetName       string `json:"asset_name"`
+	OwnerAddress    string `json:"owner_address,omitempty"`
+	ToAddress       string `json:"to_address,omitempty"`
+	Amount          int64  `json:"amount,omitempty"`
+	ContractAddress string `json:"contract_address,omitempty"`
+	Data            string `json:"data,omitempty"`
+	AssetName       string `json:"asset_name,omitempty"`
+	CallValue       int64  `json:"call_value,omitempty"`
+	CallTokenValue  int64  `json:"call_token_value,omitempty"`
+	TokenID         int64  `json:"token_id,omitempty"`
 }

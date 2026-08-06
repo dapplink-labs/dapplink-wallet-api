@@ -14,16 +14,26 @@ type Server struct {
 }
 
 type Node struct {
-	RpcUrl       string   `yaml:"rpc_url"`
-	RpcUser      string   `yaml:"rpc_user"`
-	RpcPass      string   `yaml:"rpc_pass"`
-	DataApiUrl   string   `yaml:"data_api_url"`
-	DataApiKey   string   `yaml:"data_api_key"`
-	DataApiToken string   `yaml:"data_api_token"`
-	ContractAddr []string `yaml:"contract_addr"`
-	TpApiUrl     string   `yaml:"tp_api_url"`
-	TimeOut      uint64   `yaml:"time_out"`
-	AA           AAConfig `yaml:"aa"`
+	RpcUrl       string      `yaml:"rpc_url"`
+	RpcUser      string      `yaml:"rpc_user"`
+	RpcPass      string      `yaml:"rpc_pass"`
+	DataApiUrl   string      `yaml:"data_api_url"`
+	DataApiKey   string      `yaml:"data_api_key"`
+	DataApiToken string      `yaml:"data_api_token"`
+	ContractAddr []string    `yaml:"contract_addr"`
+	TpApiUrl     string      `yaml:"tp_api_url"`
+	TimeOut      uint64      `yaml:"time_out"`
+	AA           AAConfig    `yaml:"aa"`
+	Sponsor      TronSponsor `yaml:"sponsor"`
+}
+
+type TronSponsor struct {
+	Address               string `yaml:"address"`
+	PublicKey             string `yaml:"public_key"`
+	ActivationTransferSun int64  `yaml:"activation_transfer_sun"`
+	DelegateBalanceSun    int64  `yaml:"delegate_balance_sun"`
+	EstimatedEnergy       int64  `yaml:"estimated_energy"`
+	JustLendContract      string `yaml:"justlend_contract"`
 }
 
 type AAConfig struct {

@@ -13,6 +13,7 @@ import (
 
 	"github.com/dapplink-labs/dapplink-wallet-api/chain"
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/bnbchain"
+	"github.com/dapplink-labs/dapplink-wallet-api/chain/tron"
 	"github.com/dapplink-labs/dapplink-wallet-api/config"
 	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/common"
 	"github.com/dapplink-labs/dapplink-wallet-api/protobuf/walletapi"
@@ -46,14 +47,14 @@ func NewChainDispatcher(conf *config.Config) (*ChainDispatcher, error) {
 		//ethereum.ChainID: ethereum.NewChainAdaptor,
 		//bitcoin.ChainID:  bitcoin.NewChainAdaptor,
 		//solana.ChainID:   solana.NewChainAdaptor,
-		//tron.ChainID:     tron.NewChainAdaptor, //todo: add tron chain
+		tron.ChainID:     tron.NewChainAdaptor,
 		bnbchain.ChainID: bnbchain.NewChainAdaptor,
 	}
 	supportedChains := []string{
 		//ethereum.ChainID,
 		//bitcoin.ChainID,
 		//solana.ChainID,
-		//tron.ChainID,
+		tron.ChainID,
 		bnbchain.ChainID,
 	}
 

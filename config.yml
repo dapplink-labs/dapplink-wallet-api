@@ -76,6 +76,11 @@ wallet_node:
     data_api_key: '5181d535-b68f-41cf-bbc6-25905e46b6a6'
     data_api_token: ''
     time_out: 15
+    sponsor:
+      activation_transfer_sun: 100000
+      delegate_balance_sun: 1000000000
+      estimated_energy: 150000
+      justlend_contract: "TU2MJ5Veik1LRAgjeSzEdvmDYx7mefJZvd"
 
 network: mainnet
 enable_api_cache: false

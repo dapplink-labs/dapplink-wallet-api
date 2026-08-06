@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -69,7 +70,7 @@ func (c ChainAdaptor) ConvertAddresses(ctx context.Context, req *walletapi.Conve
 	var retAddressList []*walletapi.Addresses
 	for _, publicKeyItem := range req.PublicKey {
 		var addressItem *walletapi.Addresses
-		publicKeyBytes, err := hex.DecodeString(publicKeyItem.PublicKey)
+		publicKeyBytes, err := hex.DecodeString(strings.TrimPrefix(publicKeyItem.PublicKey, "0x"))
 		if err != nil {
 			addressItem = &walletapi.Addresses{
 				Address:   "",
@@ -78,12 +79,22 @@ func (c ChainAdaptor) ConvertAddresses(ctx context.Context, req *walletapi.Conve
 			}
 			log.Error("decode public key fail", "err", err)
 		} else {
-			addressCommon := common.BytesToAddress(crypto.Keccak256(publicKeyBytes[1:])[12:])
-			log.Info("convert addresses", "address", addressCommon.String())
-			addressItem = &walletapi.Addresses{
-				Address:   addressCommon.String(),
-				PublicKey: publicKeyItem.PublicKey,
-				Type:      publicKeyItem.Type,
+			pubKey, err := btcec.ParsePubKey(publicKeyBytes)
+			if err != nil {
+				addressItem = &walletapi.Addresses{
+					Address:   "",
+					PublicKey: publicKeyItem.PublicKey,
+					Type:      publicKeyItem.Type,
+				}
+				log.Error("parse public key fail", "err", err)
+			} else {
+				addressCommon := crypto.PubkeyToAddress(*pubKey.ToECDSA())
+				log.Info("convert addresses", "address", addressCommon.String())
+				addressItem = &walletapi.Addresses{
+					Address:   addressCommon.String(),
+					PublicKey: publicKeyItem.PublicKey,
+					Type:      publicKeyItem.Type,
+				}
 			}
 		}
 		retAddressList = append(retAddressList, addressItem)

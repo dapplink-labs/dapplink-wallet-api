@@ -194,6 +194,9 @@ func (client *TronClient) CreateTRXTransaction(fromAddress, toAddress string, am
 	}
 
 	log.Info("create TRX transaction", "from", fromAddress, "to", toAddress, "amount", amount)
+	if err := validateUnsignedTransaction(&response); err != nil {
+		return nil, err
+	}
 	return &response, nil
 }
 
@@ -219,18 +222,10 @@ func (client *TronClient) CreateTRC20Transaction(fromAddress, toAddress, contrac
 		"visible":           true,
 	}
 
-	var response Transaction
-	resp, err := client.rpc.R().
-		SetBody(requestBody).
-		SetResult(&response).
-		Post("/wallet/triggersmartcontract")
-
+	tx, err := client.triggerSmartContract(requestBody)
 	if err != nil {
-		return nil, fmt.Errorf("request failed: %v", err)
-	}
-	if resp.IsError() {
-		return nil, fmt.Errorf("API request failed with status code: %d, body: %s", resp.StatusCode(), string(resp.Body()))
+		return nil, err
 	}
 	log.Info("create TRC20 transaction", "from", fromAddress, "to", toAddress, "contract", contractAddress, "amount", amount)
-	return &response, nil
+	return tx, nil
 }
