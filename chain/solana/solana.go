@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,10 +13,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/programs/system"
 	"github.com/gagliardetto/solana-go/programs/token"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/mr-tron/base58"
 
 	"github.com/dapplink-labs/dapplink-wallet-api/chain"
 	"github.com/dapplink-labs/dapplink-wallet-api/config"
@@ -167,10 +166,111 @@ func (c *ChainAdaptor) GetBlock(ctx context.Context, req *walletapi.BlockRequest
 }
 
 func (c *ChainAdaptor) GetBatchBlock(ctx context.Context, req *walletapi.BatchBlockRequest) (*walletapi.BatchBlockResponse, error) {
+	startHeight, err := strconv.ParseUint(req.NextHeight, 10, 64)
+	if err != nil {
+		return &walletapi.BatchBlockResponse{Code: common.ReturnCode_ERROR, Msg: "invalid next height"}, nil
+	}
+	endHeight, err := strconv.ParseUint(req.EndHeight, 10, 64)
+	if err != nil {
+		return &walletapi.BatchBlockResponse{Code: common.ReturnCode_ERROR, Msg: "invalid end height"}, nil
+	}
+	if startHeight > endHeight {
+		return &walletapi.BatchBlockResponse{Code: common.ReturnCode_ERROR, Msg: "next height is greater than end height"}, nil
+	}
+
+	if !req.WithTransactions {
+		headers := make([]*walletapi.BlockHeaderInfo, 0, endHeight-startHeight+1)
+		for slot := startHeight; slot <= endHeight; slot++ {
+			blockResult, blockErr := c.solCli.GetBlockBySlot(slot, None)
+			if blockErr != nil {
+				// Empty/skipped slots are common on Solana; continue.
+				log.Debug("skip empty slot header", "slot", slot, "err", blockErr)
+				continue
+			}
+			headers = append(headers, &walletapi.BlockHeaderInfo{
+				Height:     strconv.FormatUint(slot, 10),
+				Hash:       blockResult.BlockHash,
+				ParentHash: blockResult.PreviousBlockhash,
+				Timestamp:  uint64(blockResult.BlockTime),
+			})
+		}
+		return &walletapi.BatchBlockResponse{
+			Code:    common.ReturnCode_SUCCESS,
+			Msg:     "get batch block success",
+			Headers: headers,
+		}, nil
+	}
+
+	blocks := make([]*walletapi.BlockWithTransactions, 0, endHeight-startHeight+1)
+	for slot := startHeight; slot <= endHeight; slot++ {
+		// Use signatures detail for reliable signature lists, then hydrate transfers.
+		blockResult, blockErr := c.solCli.GetBlockBySlot(slot, Signatures)
+		if blockErr != nil {
+			log.Debug("skip empty slot", "slot", slot, "err", blockErr)
+			continue
+		}
+		blocks = append(blocks, &walletapi.BlockWithTransactions{
+			Height:       strconv.FormatUint(slot, 10),
+			Hash:         blockResult.BlockHash,
+			ParentHash:   blockResult.PreviousBlockhash,
+			Timestamp:    uint64(blockResult.BlockTime),
+			Transactions: c.parseBlockTransactions(blockResult),
+		})
+	}
 	return &walletapi.BatchBlockResponse{
-		Code: common.ReturnCode_ERROR,
-		Msg:  "batch block query is not supported",
+		Code:   common.ReturnCode_SUCCESS,
+		Msg:    "get batch block success",
+		Blocks: blocks,
 	}, nil
+}
+
+func (c *ChainAdaptor) parseBlockTransactions(blockResult *BlockResult) []*walletapi.TransactionList {
+	if blockResult == nil {
+		return nil
+	}
+	sigs := collectBlockSignatures(blockResult)
+	if len(sigs) == 0 {
+		return nil
+	}
+	txResults, err := c.solCli.GetTransactionRange(sigs)
+	if err != nil {
+		log.Warn("get transaction range for block failed, fallback to hashes only", "err", err, "count", len(sigs))
+		out := make([]*walletapi.TransactionList, 0, len(sigs))
+		for _, hash := range sigs {
+			out = append(out, &walletapi.TransactionList{TxHash: hash})
+		}
+		return out
+	}
+	out := make([]*walletapi.TransactionList, 0, len(txResults))
+	for _, txResult := range txResults {
+		if txResult == nil {
+			continue
+		}
+		hash := ""
+		if len(txResult.Transaction.Signatures) > 0 {
+			hash = txResult.Transaction.Signatures[0]
+		}
+		transfer := parseTransactionResult(txResult)
+		out = append(out, toWalletTransaction(hash, transfer, txResult.Meta.Err))
+	}
+	return out
+}
+
+func collectBlockSignatures(blockResult *BlockResult) []string {
+	if len(blockResult.Signatures) > 0 {
+		return blockResult.Signatures
+	}
+	out := make([]string, 0, len(blockResult.Transactions))
+	for _, tx := range blockResult.Transactions {
+		if tx.Signature != "" {
+			out = append(out, tx.Signature)
+			continue
+		}
+		// json encoding often nests signatures under transaction.signatures
+		raw, _ := json.Marshal(tx.Message)
+		_ = raw
+	}
+	return out
 }
 
 func (c *ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.TransactionByHashRequest) (*walletapi.TransactionByHashResponse, error) {
@@ -182,58 +282,11 @@ func (c *ChainAdaptor) GetTransactionByHash(ctx context.Context, req *walletapi.
 			Msg:  err.Error(),
 		}, err
 	}
-
-	var fromAddr, toAddr, amount, contractAddress string
-	var txType uint32
-
-	if len(txResult.Transaction.Message.Instructions) > 0 {
-		instruction := txResult.Transaction.Message.Instructions[0]
-		accounts := txResult.Transaction.Message.AccountKeys
-
-		if instruction.ProgramIdIndex < len(accounts) {
-			programId := accounts[instruction.ProgramIdIndex]
-
-			if programId == system.ProgramID.String() {
-				txType = 1 // Native SOL transfer
-				if len(instruction.Accounts) >= 2 {
-					fromAddr = accounts[instruction.Accounts[0]]
-					toAddr = accounts[instruction.Accounts[1]]
-				}
-				if len(instruction.Data) >= 4 {
-					data, _ := base58.Decode(instruction.Data)
-					if len(data) >= 12 {
-						lamports := uint64(data[4]) | uint64(data[5])<<8 | uint64(data[6])<<16 | uint64(data[7])<<24 |
-							uint64(data[8])<<32 | uint64(data[9])<<40 | uint64(data[10])<<48 | uint64(data[11])<<56
-						amount = strconv.FormatUint(lamports, 10)
-					}
-				}
-			} else if programId == token.ProgramID.String() {
-				txType = 2 // SPL Token transfer
-				contractAddress = programId
-				if len(instruction.Accounts) >= 3 {
-					fromAddr = accounts[instruction.Accounts[0]]
-					toAddr = accounts[instruction.Accounts[1]]
-				}
-			}
-		}
-	}
-
+	transfer := parseTransactionResult(txResult)
 	return &walletapi.TransactionByHashResponse{
-		Code: common.ReturnCode_SUCCESS,
-		Msg:  "success",
-		Transaction: &walletapi.TransactionList{
-			TxHash:          req.Hash,
-			Fee:             strconv.FormatUint(txResult.Meta.Fee, 10),
-			Status:          0,
-			TxType:          txType,
-			ContractAddress: contractAddress,
-			From: []*walletapi.FromAddress{
-				{Address: fromAddr, Amount: amount},
-			},
-			To: []*walletapi.ToAddress{
-				{Address: toAddr, Amount: amount},
-			},
-		},
+		Code:        common.ReturnCode_SUCCESS,
+		Msg:         "success",
+		Transaction: toWalletTransaction(req.Hash, transfer, txResult.Meta.Err),
 	}, nil
 }
 
@@ -312,11 +365,11 @@ func (c *ChainAdaptor) GetAccountBalance(ctx context.Context, req *walletapi.Acc
 
 		accountInfo, err := GetAccountInfo(c.sdkClient, ata)
 		if err != nil {
+			// Distinguish missing ATA from zero-balance ATA so fee-payer collection can create it.
 			return &walletapi.AccountBalanceResponse{
-				Code:    common.ReturnCode_SUCCESS,
-				Msg:     "success",
-				Balance: "0",
-			}, nil
+				Code: common.ReturnCode_ERROR,
+				Msg:  "associated token account not found",
+			}, fmt.Errorf("associated token account not found: %w", err)
 		}
 
 		var tokenAccount token.Account
@@ -382,14 +435,41 @@ func (c *ChainAdaptor) BuildTransactionSchema(ctx context.Context, request *wall
 }
 
 func (c *ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *walletapi.UnSignTransactionRequest) (*walletapi.UnSignTransactionResponse, error) {
-	var unsignedTxList []*walletapi.UnsignedTransactionMessageHash
+	recentBlockhash, err := c.solCli.GetLatestBlockhash(Confirmed)
+	if err != nil {
+		log.Error("get latest blockhash fail", "err", err)
+		return &walletapi.UnSignTransactionResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+	}
 
+	var unsignedTxList []*walletapi.UnsignedTransactionMessageHash
 	for _, base64Txn := range request.Base64Txn {
-		// For now, just return the transaction as-is
-		// In a real implementation, you would parse the transaction data
-		// and build the unsigned transaction
+		jsonBytes, err := base64.StdEncoding.DecodeString(base64Txn.Base64Tx)
+		if err != nil {
+			log.Error("decode base64 payload fail", "err", err)
+			return &walletapi.UnSignTransactionResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		var payload SolanaTransferTx
+		if err := json.Unmarshal(jsonBytes, &payload); err != nil {
+			log.Error("unmarshal solana transfer payload fail", "err", err)
+			return &walletapi.UnSignTransactionResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		tx, err := buildSolanaTransferTransaction(payload, recentBlockhash)
+		if err != nil {
+			log.Error("build solana transfer fail", "err", err)
+			return &walletapi.UnSignTransactionResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		env, err := envelopeFromTransaction(tx)
+		if err != nil {
+			log.Error("envelope from transaction fail", "err", err)
+			return &walletapi.UnSignTransactionResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		encoded, err := encodeEnvelope(env)
+		if err != nil {
+			return &walletapi.UnSignTransactionResponse{Code: common.ReturnCode_ERROR, Msg: err.Error()}, err
+		}
+		// UnsignedTx is the envelope; MessageHash for signing is env.MessageHex (extracted by wallet-service).
 		unsignedTxList = append(unsignedTxList, &walletapi.UnsignedTransactionMessageHash{
-			UnsignedTx: base64Txn.Base64Tx,
+			UnsignedTx: encoded,
 		})
 	}
 
@@ -401,13 +481,50 @@ func (c *ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *wall
 }
 
 func (c *ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *walletapi.SignedTransactionRequest) (*walletapi.SignedTransactionResponse, error) {
-	var signedTxList []*walletapi.SignedTxWithHash
+	// Group by Base64Tx so multiple signer signatures can be merged for fee-payer flows.
+	type pending struct {
+		env *UnsignedEnvelope
+	}
+	grouped := make(map[string]*pending)
+	order := make([]string, 0)
 
 	for _, txnWithSig := range request.TxnWithSignature {
-		// Decode unsigned transaction
-		txBytes, err := base64.StdEncoding.DecodeString(txnWithSig.Base64Tx)
+		env, err := decodeEnvelope(txnWithSig.Base64Tx)
 		if err != nil {
-			log.Error("decode base64 tx fail", "err", err)
+			log.Error("decode envelope fail", "err", err)
+			continue
+		}
+		p, ok := grouped[txnWithSig.Base64Tx]
+		if !ok {
+			p = &pending{env: env}
+			grouped[txnWithSig.Base64Tx] = p
+			order = append(order, txnWithSig.Base64Tx)
+		}
+		signerKey := strings.TrimSpace(txnWithSig.PublicKey)
+		if signerKey != "" {
+			if addr, err := publicKeyHexToBase58(signerKey); err == nil {
+				signerKey = addr
+			} else if _, err2 := solana.PublicKeyFromBase58(signerKey); err2 != nil {
+				log.Error("invalid signer public key", "publicKey", txnWithSig.PublicKey, "err", err)
+				continue
+			}
+		}
+		if signerKey == "" && len(p.env.SignerKeys) == 1 {
+			signerKey = p.env.SignerKeys[0]
+		}
+		if signerKey == "" {
+			log.Error("missing signer public key for solana signed tx")
+			continue
+		}
+		p.env.Signatures[signerKey] = strings.TrimSpace(txnWithSig.Signature)
+	}
+
+	var signedTxList []*walletapi.SignedTxWithHash
+	for _, key := range order {
+		p := grouped[key]
+		tx, txHash, err := assembleSignedTransaction(p.env)
+		if err != nil {
+			log.Error("assemble signed solana tx fail", "err", err)
 			signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
 				SignedTx:  "",
 				TxHash:    "",
@@ -415,11 +532,8 @@ func (c *ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *wall
 			})
 			continue
 		}
-
-		// Decode signature
-		signatureBytes, err := hex.DecodeString(strings.TrimPrefix(txnWithSig.Signature, "0x"))
+		signedB64, err := serializeSignedTxBase64(tx)
 		if err != nil {
-			log.Error("decode signature fail", "err", err)
 			signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
 				SignedTx:  "",
 				TxHash:    "",
@@ -427,43 +541,8 @@ func (c *ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *wall
 			})
 			continue
 		}
-
-		// Reconstruct transaction with signature
-		var message solana.Message
-		decoder := bin.NewBinDecoder(txBytes)
-		err = message.UnmarshalWithDecoder(decoder)
-		if err != nil {
-			log.Error("unmarshal message fail", "err", err)
-			signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
-				SignedTx:  "",
-				TxHash:    "",
-				IsSuccess: false,
-			})
-			continue
-		}
-
-		tx := &solana.Transaction{
-			Signatures: []solana.Signature{solana.SignatureFromBytes(signatureBytes)},
-			Message:    message,
-		}
-
-		// Serialize signed transaction
-		signedTxBytes, err := tx.MarshalBinary()
-		if err != nil {
-			log.Error("marshal signed tx fail", "err", err)
-			signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
-				SignedTx:  "",
-				TxHash:    "",
-				IsSuccess: false,
-			})
-			continue
-		}
-
-		// Calculate transaction hash (first signature)
-		txHash := base58.Encode(signatureBytes)
-
 		signedTxList = append(signedTxList, &walletapi.SignedTxWithHash{
-			SignedTx:  base64.StdEncoding.EncodeToString(signedTxBytes),
+			SignedTx:  signedB64,
 			TxHash:    txHash,
 			IsSuccess: true,
 		})
