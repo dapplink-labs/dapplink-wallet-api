@@ -32,4 +32,6 @@ type IChainAdaptor interface {
 	SendSponsoredTransfer(ctx context.Context, request *walletapi.SponsoredTransferSendRequest) (*walletapi.SendTransactionResponse, error)
 
 	GetAddressApproveList(ctx context.Context, request *walletapi.AddressApproveListRequest) (*walletapi.AddressApproveListResponse, error)
+
+	CallContract(ctx context.Context, request *walletapi.CallContractRequest) (*walletapi.CallContractResponse, error)
 }

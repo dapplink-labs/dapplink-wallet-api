@@ -373,29 +373,29 @@ func (c ChainAdaptor) SendTransaction(ctx context.Context, req *walletapi.SendTr
 }
 
 func (c ChainAdaptor) BuildTransactionSchema(ctx context.Context, request *walletapi.TransactionSchemaRequest) (*walletapi.TransactionSchemaResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &walletapi.TransactionSchemaResponse{Code: common.ReturnCode_ERROR, Msg: "unsupported on Bitcoin"}, nil
 }
 
 func (c ChainAdaptor) BuildUnSignTransaction(ctx context.Context, request *walletapi.UnSignTransactionRequest) (*walletapi.UnSignTransactionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &walletapi.UnSignTransactionResponse{Code: common.ReturnCode_ERROR, Msg: "unsupported on Bitcoin"}, nil
 }
 
 func (c ChainAdaptor) BuildSignedTransaction(ctx context.Context, request *walletapi.SignedTransactionRequest) (*walletapi.SignedTransactionResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &walletapi.SignedTransactionResponse{Code: common.ReturnCode_ERROR, Msg: "unsupported on Bitcoin"}, nil
 }
 
 func (c ChainAdaptor) GetAddressApproveList(ctx context.Context, request *walletapi.AddressApproveListRequest) (*walletapi.AddressApproveListResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &walletapi.AddressApproveListResponse{Code: common.ReturnCode_ERROR, Msg: "unsupported on Bitcoin"}, nil
 }
 
 func (c ChainAdaptor) BuildSponsoredTransfer(ctx context.Context, request *walletapi.SponsoredTransferRequest) (*walletapi.SponsoredTransferBuildResponse, error) {
-	panic("implement me")
+	return &walletapi.SponsoredTransferBuildResponse{Code: common.ReturnCode_ERROR, Msg: "unsupported on Bitcoin"}, nil
 }
 
 func (c ChainAdaptor) SendSponsoredTransfer(ctx context.Context, request *walletapi.SponsoredTransferSendRequest) (*walletapi.SendTransactionResponse, error) {
-	panic("implement me")
+	return &walletapi.SendTransactionResponse{Code: common.ReturnCode_ERROR, Msg: "unsupported on Bitcoin"}, nil
+}
+
+func (c ChainAdaptor) CallContract(ctx context.Context, request *walletapi.CallContractRequest) (*walletapi.CallContractResponse, error) {
+	return &walletapi.CallContractResponse{Code: common.ReturnCode_ERROR, Msg: "callContract not supported on Bitcoin"}, nil
 }

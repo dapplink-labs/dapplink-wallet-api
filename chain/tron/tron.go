@@ -609,3 +609,7 @@ func (c *ChainAdaptor) BuildSponsoredTransfer(ctx context.Context, request *wall
 func (c *ChainAdaptor) SendSponsoredTransfer(ctx context.Context, request *walletapi.SponsoredTransferSendRequest) (*walletapi.SendTransactionResponse, error) {
 	return &walletapi.SendTransactionResponse{Code: common.ReturnCode_ERROR, Msg: "unsupported chain"}, nil
 }
+
+func (c *ChainAdaptor) CallContract(ctx context.Context, request *walletapi.CallContractRequest) (*walletapi.CallContractResponse, error) {
+	return &walletapi.CallContractResponse{Code: common.ReturnCode_ERROR, Msg: "callContract not supported on Tron"}, nil
+}

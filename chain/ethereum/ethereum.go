@@ -589,3 +589,29 @@ func (c ChainAdaptor) BuildSponsoredTransfer(ctx context.Context, request *walle
 func (c ChainAdaptor) SendSponsoredTransfer(ctx context.Context, request *walletapi.SponsoredTransferSendRequest) (*walletapi.SendTransactionResponse, error) {
 	return &walletapi.SendTransactionResponse{Code: common2.ReturnCode_ERROR, Msg: "unsupported chain"}, nil
 }
+
+func (c ChainAdaptor) CallContract(ctx context.Context, request *walletapi.CallContractRequest) (*walletapi.CallContractResponse, error) {
+	if request.ContractAddress == "" {
+		return &walletapi.CallContractResponse{Code: common2.ReturnCode_ERROR, Msg: "contract_address is required"}, nil
+	}
+	toAddr := common.HexToAddress(request.ContractAddress)
+	dataHex := strings.TrimPrefix(request.Data, "0x")
+	data, err := hex.DecodeString(dataHex)
+	if err != nil {
+		return &walletapi.CallContractResponse{Code: common2.ReturnCode_ERROR, Msg: "invalid call data: " + err.Error()}, nil
+	}
+	msg := ethereum.CallMsg{To: &toAddr, Data: data}
+	if request.From != "" {
+		msg.From = common.HexToAddress(request.From)
+	}
+	result, err := c.ethClient.CallContract(msg)
+	if err != nil {
+		log.Error("eth_call fail", "err", err, "to", request.ContractAddress)
+		return &walletapi.CallContractResponse{Code: common2.ReturnCode_ERROR, Msg: err.Error()}, nil
+	}
+	return &walletapi.CallContractResponse{
+		Code:   common2.ReturnCode_SUCCESS,
+		Msg:    "success",
+		Result: "0x" + hex.EncodeToString(result),
+	}, nil
+}

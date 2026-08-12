@@ -570,6 +570,10 @@ func (c *ChainAdaptor) SendSponsoredTransfer(ctx context.Context, request *walle
 	return &walletapi.SendTransactionResponse{Code: common.ReturnCode_ERROR, Msg: "unsupported chain"}, nil
 }
 
+func (c *ChainAdaptor) CallContract(ctx context.Context, request *walletapi.CallContractRequest) (*walletapi.CallContractResponse, error) {
+	return &walletapi.CallContractResponse{Code: common.ReturnCode_ERROR, Msg: "callContract not supported on Solana"}, nil
+}
+
 func PubKeyHexToAddress(pubKeyHex string) (string, error) {
 	pubKeyHex = strings.TrimPrefix(pubKeyHex, "0x")
 	pubKeyBytes, err := hex.DecodeString(pubKeyHex)

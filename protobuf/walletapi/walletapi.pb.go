@@ -3253,6 +3253,150 @@ func (x *SponsoredTransferSendRequest) GetUserOpSignature() string {
 	return ""
 }
 
+type CallContractRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ConsumerToken   string                 `protobuf:"bytes,1,opt,name=consumer_token,json=consumerToken,proto3" json:"consumer_token,omitempty"`
+	ChainId         string                 `protobuf:"bytes,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	Network         string                 `protobuf:"bytes,3,opt,name=network,proto3" json:"network,omitempty"`
+	ContractAddress string                 `protobuf:"bytes,4,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	Data            string                 `protobuf:"bytes,5,opt,name=data,proto3" json:"data,omitempty"`
+	From            string                 `protobuf:"bytes,6,opt,name=from,proto3" json:"from,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *CallContractRequest) Reset() {
+	*x = CallContractRequest{}
+	mi := &file_dapplink_walletapi_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CallContractRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CallContractRequest) ProtoMessage() {}
+
+func (x *CallContractRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_walletapi_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CallContractRequest.ProtoReflect.Descriptor instead.
+func (*CallContractRequest) Descriptor() ([]byte, []int) {
+	return file_dapplink_walletapi_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *CallContractRequest) GetConsumerToken() string {
+	if x != nil {
+		return x.ConsumerToken
+	}
+	return ""
+}
+
+func (x *CallContractRequest) GetChainId() string {
+	if x != nil {
+		return x.ChainId
+	}
+	return ""
+}
+
+func (x *CallContractRequest) GetNetwork() string {
+	if x != nil {
+		return x.Network
+	}
+	return ""
+}
+
+func (x *CallContractRequest) GetContractAddress() string {
+	if x != nil {
+		return x.ContractAddress
+	}
+	return ""
+}
+
+func (x *CallContractRequest) GetData() string {
+	if x != nil {
+		return x.Data
+	}
+	return ""
+}
+
+func (x *CallContractRequest) GetFrom() string {
+	if x != nil {
+		return x.From
+	}
+	return ""
+}
+
+type CallContractResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          common.ReturnCode      `protobuf:"varint,1,opt,name=code,proto3,enum=dapplink.ReturnCode" json:"code,omitempty"`
+	Msg           string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Result        string                 `protobuf:"bytes,3,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CallContractResponse) Reset() {
+	*x = CallContractResponse{}
+	mi := &file_dapplink_walletapi_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CallContractResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CallContractResponse) ProtoMessage() {}
+
+func (x *CallContractResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dapplink_walletapi_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CallContractResponse.ProtoReflect.Descriptor instead.
+func (*CallContractResponse) Descriptor() ([]byte, []int) {
+	return file_dapplink_walletapi_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *CallContractResponse) GetCode() common.ReturnCode {
+	if x != nil {
+		return x.Code
+	}
+	return common.ReturnCode(0)
+}
+
+func (x *CallContractResponse) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *CallContractResponse) GetResult() string {
+	if x != nil {
+		return x.Result
+	}
+	return ""
+}
+
 var File_dapplink_walletapi_proto protoreflect.FileDescriptor
 
 const file_dapplink_walletapi_proto_rawDesc = "" +
@@ -3510,14 +3654,25 @@ const file_dapplink_walletapi_proto_rawDesc = "" +
 	"\fuser_op_json\x18\x04 \x01(\tR\n" +
 	"userOpJson\x12%\n" +
 	"\x0eauth_signature\x18\x05 \x01(\tR\rauthSignature\x12*\n" +
-	"\x11user_op_signature\x18\x06 \x01(\tR\x0fuserOpSignature*I\n" +
+	"\x11user_op_signature\x18\x06 \x01(\tR\x0fuserOpSignature\"\xc4\x01\n" +
+	"\x13CallContractRequest\x12%\n" +
+	"\x0econsumer_token\x18\x01 \x01(\tR\rconsumerToken\x12\x19\n" +
+	"\bchain_id\x18\x02 \x01(\tR\achainId\x12\x18\n" +
+	"\anetwork\x18\x03 \x01(\tR\anetwork\x12)\n" +
+	"\x10contract_address\x18\x04 \x01(\tR\x0fcontractAddress\x12\x12\n" +
+	"\x04data\x18\x05 \x01(\tR\x04data\x12\x12\n" +
+	"\x04from\x18\x06 \x01(\tR\x04from\"j\n" +
+	"\x14CallContractResponse\x12(\n" +
+	"\x04code\x18\x01 \x01(\x0e2\x14.dapplink.ReturnCodeR\x04code\x12\x10\n" +
+	"\x03msg\x18\x02 \x01(\tR\x03msg\x12\x16\n" +
+	"\x06result\x18\x03 \x01(\tR\x06result*I\n" +
 	"\bTxStatus\x12\f\n" +
 	"\bNotFound\x10\x00\x12\v\n" +
 	"\aPending\x10\x01\x12\n" +
 	"\n" +
 	"\x06Failed\x10\x02\x12\v\n" +
 	"\aSuccess\x10\x03\x12\t\n" +
-	"\x05Other\x10\x042\xec\v\n" +
+	"\x05Other\x10\x042\xbd\f\n" +
 	"\x17WalletApiGateWayService\x12S\n" +
 	"\x10getSupportChains\x12\x1d.dapplink.SupportChainRequest\x1a\x1e.dapplink.SupportChainResponse\"\x00\x12[\n" +
 	"\x10convertAddresses\x12!.dapplink.ConvertAddressesRequest\x1a\".dapplink.ConvertAddressesResponse\"\x00\x12U\n" +
@@ -3534,7 +3689,8 @@ const file_dapplink_walletapi_proto_rawDesc = "" +
 	"\x16buildSignedTransaction\x12\".dapplink.SignedTransactionRequest\x1a#.dapplink.SignedTransactionResponse\"\x00\x12d\n" +
 	"\x15getAddressApproveList\x12#.dapplink.AddressApproveListRequest\x1a$.dapplink.AddressApproveListResponse\"\x00\x12h\n" +
 	"\x16buildSponsoredTransfer\x12\".dapplink.SponsoredTransferRequest\x1a(.dapplink.SponsoredTransferBuildResponse\"\x00\x12d\n" +
-	"\x15sendSponsoredTransfer\x12&.dapplink.SponsoredTransferSendRequest\x1a!.dapplink.SendTransactionResponse\"\x00B\x17Z\x15../protobuf/walletapib\x06proto3"
+	"\x15sendSponsoredTransfer\x12&.dapplink.SponsoredTransferSendRequest\x1a!.dapplink.SendTransactionResponse\"\x00\x12O\n" +
+	"\fcallContract\x12\x1d.dapplink.CallContractRequest\x1a\x1e.dapplink.CallContractResponse\"\x00BAZ?github.com/dapplink-labs/dapplink-wallet-api/protobuf/walletapib\x06proto3"
 
 var (
 	file_dapplink_walletapi_proto_rawDescOnce sync.Once
@@ -3549,7 +3705,7 @@ func file_dapplink_walletapi_proto_rawDescGZIP() []byte {
 }
 
 var file_dapplink_walletapi_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_dapplink_walletapi_proto_msgTypes = make([]protoimpl.MessageInfo, 48)
+var file_dapplink_walletapi_proto_msgTypes = make([]protoimpl.MessageInfo, 50)
 var file_dapplink_walletapi_proto_goTypes = []any{
 	(TxStatus)(0),                          // 0: dapplink.TxStatus
 	(*CommonResponse)(nil),                 // 1: dapplink.CommonResponse
@@ -3600,84 +3756,89 @@ var file_dapplink_walletapi_proto_goTypes = []any{
 	(*SponsoredTransferRequest)(nil),       // 46: dapplink.SponsoredTransferRequest
 	(*SponsoredTransferBuildResponse)(nil), // 47: dapplink.SponsoredTransferBuildResponse
 	(*SponsoredTransferSendRequest)(nil),   // 48: dapplink.SponsoredTransferSendRequest
-	(common.ReturnCode)(0),                 // 49: dapplink.ReturnCode
-	(*common.PublicKey)(nil),               // 50: dapplink.PublicKey
+	(*CallContractRequest)(nil),            // 49: dapplink.CallContractRequest
+	(*CallContractResponse)(nil),           // 50: dapplink.CallContractResponse
+	(common.ReturnCode)(0),                 // 51: dapplink.ReturnCode
+	(*common.PublicKey)(nil),               // 52: dapplink.PublicKey
 }
 var file_dapplink_walletapi_proto_depIdxs = []int32{
-	49, // 0: dapplink.CommonResponse.code:type_name -> dapplink.ReturnCode
+	51, // 0: dapplink.CommonResponse.code:type_name -> dapplink.ReturnCode
 	2,  // 1: dapplink.SupportChain.end_point:type_name -> dapplink.EndPoint
-	49, // 2: dapplink.SupportChainResponse.code:type_name -> dapplink.ReturnCode
+	51, // 2: dapplink.SupportChainResponse.code:type_name -> dapplink.ReturnCode
 	3,  // 3: dapplink.SupportChainResponse.chains:type_name -> dapplink.SupportChain
-	50, // 4: dapplink.ConvertAddressesRequest.public_key:type_name -> dapplink.PublicKey
-	49, // 5: dapplink.ConvertAddressesResponse.code:type_name -> dapplink.ReturnCode
+	52, // 4: dapplink.ConvertAddressesRequest.public_key:type_name -> dapplink.PublicKey
+	51, // 5: dapplink.ConvertAddressesResponse.code:type_name -> dapplink.ReturnCode
 	6,  // 6: dapplink.ConvertAddressesResponse.address:type_name -> dapplink.Addresses
 	6,  // 7: dapplink.ValidAddressesRequest.addresses:type_name -> dapplink.Addresses
-	49, // 8: dapplink.ValidAddressesResponse.code:type_name -> dapplink.ReturnCode
+	51, // 8: dapplink.ValidAddressesResponse.code:type_name -> dapplink.ReturnCode
 	9,  // 9: dapplink.ValidAddressesResponse.address_valid:type_name -> dapplink.AddressesValid
-	49, // 10: dapplink.LastestBlockResponse.code:type_name -> dapplink.ReturnCode
+	51, // 10: dapplink.LastestBlockResponse.code:type_name -> dapplink.ReturnCode
 	14, // 11: dapplink.TransactionList.from:type_name -> dapplink.FromAddress
 	15, // 12: dapplink.TransactionList.to:type_name -> dapplink.ToAddress
-	49, // 13: dapplink.BlockResponse.code:type_name -> dapplink.ReturnCode
+	51, // 13: dapplink.BlockResponse.code:type_name -> dapplink.ReturnCode
 	16, // 14: dapplink.BlockResponse.transactions:type_name -> dapplink.TransactionList
 	16, // 15: dapplink.BlockWithTransactions.transactions:type_name -> dapplink.TransactionList
-	49, // 16: dapplink.BatchBlockResponse.code:type_name -> dapplink.ReturnCode
+	51, // 16: dapplink.BatchBlockResponse.code:type_name -> dapplink.ReturnCode
 	18, // 17: dapplink.BatchBlockResponse.headers:type_name -> dapplink.BlockHeaderInfo
 	21, // 18: dapplink.BatchBlockResponse.blocks:type_name -> dapplink.BlockWithTransactions
-	49, // 19: dapplink.TransactionByHashResponse.code:type_name -> dapplink.ReturnCode
+	51, // 19: dapplink.TransactionByHashResponse.code:type_name -> dapplink.ReturnCode
 	16, // 20: dapplink.TransactionByHashResponse.transaction:type_name -> dapplink.TransactionList
-	49, // 21: dapplink.TransactionByAddressResponse.code:type_name -> dapplink.ReturnCode
+	51, // 21: dapplink.TransactionByAddressResponse.code:type_name -> dapplink.ReturnCode
 	16, // 22: dapplink.TransactionByAddressResponse.transaction:type_name -> dapplink.TransactionList
-	49, // 23: dapplink.AccountBalanceResponse.code:type_name -> dapplink.ReturnCode
+	51, // 23: dapplink.AccountBalanceResponse.code:type_name -> dapplink.ReturnCode
 	29, // 24: dapplink.SendTransactionsRequest.raw_tx:type_name -> dapplink.RawTransaction
-	49, // 25: dapplink.SendTransactionResponse.code:type_name -> dapplink.ReturnCode
+	51, // 25: dapplink.SendTransactionResponse.code:type_name -> dapplink.ReturnCode
 	31, // 26: dapplink.SendTransactionResponse.txn_ret:type_name -> dapplink.RawTransactionReturn
-	49, // 27: dapplink.TransactionSchemaResponse.code:type_name -> dapplink.ReturnCode
+	51, // 27: dapplink.TransactionSchemaResponse.code:type_name -> dapplink.ReturnCode
 	35, // 28: dapplink.UnSignTransactionRequest.base64_txn:type_name -> dapplink.Base64Transaction
-	49, // 29: dapplink.UnSignTransactionResponse.code:type_name -> dapplink.ReturnCode
+	51, // 29: dapplink.UnSignTransactionResponse.code:type_name -> dapplink.ReturnCode
 	36, // 30: dapplink.UnSignTransactionResponse.unsigned_txn:type_name -> dapplink.UnsignedTransactionMessageHash
 	39, // 31: dapplink.SignedTransactionRequest.txn_with_signature:type_name -> dapplink.Base64TransactionWithSignature
-	49, // 32: dapplink.SignedTransactionResponse.code:type_name -> dapplink.ReturnCode
+	51, // 32: dapplink.SignedTransactionResponse.code:type_name -> dapplink.ReturnCode
 	40, // 33: dapplink.SignedTransactionResponse.signed_txn:type_name -> dapplink.SignedTxWithHash
-	49, // 34: dapplink.AddressApproveListResponse.code:type_name -> dapplink.ReturnCode
+	51, // 34: dapplink.AddressApproveListResponse.code:type_name -> dapplink.ReturnCode
 	43, // 35: dapplink.AddressApproveListResponse.contracts:type_name -> dapplink.ApproveContractList
-	49, // 36: dapplink.SponsoredTransferBuildResponse.code:type_name -> dapplink.ReturnCode
-	4,  // 37: dapplink.WalletApiGateWayService.getSupportChains:input_type -> dapplink.SupportChainRequest
-	7,  // 38: dapplink.WalletApiGateWayService.convertAddresses:input_type -> dapplink.ConvertAddressesRequest
-	10, // 39: dapplink.WalletApiGateWayService.validAddresses:input_type -> dapplink.ValidAddressesRequest
-	12, // 40: dapplink.WalletApiGateWayService.getLastestBlock:input_type -> dapplink.LastestBlockRequest
-	17, // 41: dapplink.WalletApiGateWayService.getBlock:input_type -> dapplink.BlockRequest
-	19, // 42: dapplink.WalletApiGateWayService.getBatchBlock:input_type -> dapplink.BatchBlockRequest
-	23, // 43: dapplink.WalletApiGateWayService.getTransactionByHash:input_type -> dapplink.TransactionByHashRequest
-	25, // 44: dapplink.WalletApiGateWayService.getTransactionByAddress:input_type -> dapplink.TransactionByAddressRequest
-	27, // 45: dapplink.WalletApiGateWayService.getAccountBalance:input_type -> dapplink.AccountBalanceRequest
-	30, // 46: dapplink.WalletApiGateWayService.sendTransaction:input_type -> dapplink.SendTransactionsRequest
-	33, // 47: dapplink.WalletApiGateWayService.buildTransactionSchema:input_type -> dapplink.TransactionSchemaRequest
-	37, // 48: dapplink.WalletApiGateWayService.buildUnSignTransaction:input_type -> dapplink.UnSignTransactionRequest
-	41, // 49: dapplink.WalletApiGateWayService.buildSignedTransaction:input_type -> dapplink.SignedTransactionRequest
-	44, // 50: dapplink.WalletApiGateWayService.getAddressApproveList:input_type -> dapplink.AddressApproveListRequest
-	46, // 51: dapplink.WalletApiGateWayService.buildSponsoredTransfer:input_type -> dapplink.SponsoredTransferRequest
-	48, // 52: dapplink.WalletApiGateWayService.sendSponsoredTransfer:input_type -> dapplink.SponsoredTransferSendRequest
-	5,  // 53: dapplink.WalletApiGateWayService.getSupportChains:output_type -> dapplink.SupportChainResponse
-	8,  // 54: dapplink.WalletApiGateWayService.convertAddresses:output_type -> dapplink.ConvertAddressesResponse
-	11, // 55: dapplink.WalletApiGateWayService.validAddresses:output_type -> dapplink.ValidAddressesResponse
-	13, // 56: dapplink.WalletApiGateWayService.getLastestBlock:output_type -> dapplink.LastestBlockResponse
-	20, // 57: dapplink.WalletApiGateWayService.getBlock:output_type -> dapplink.BlockResponse
-	22, // 58: dapplink.WalletApiGateWayService.getBatchBlock:output_type -> dapplink.BatchBlockResponse
-	24, // 59: dapplink.WalletApiGateWayService.getTransactionByHash:output_type -> dapplink.TransactionByHashResponse
-	26, // 60: dapplink.WalletApiGateWayService.getTransactionByAddress:output_type -> dapplink.TransactionByAddressResponse
-	28, // 61: dapplink.WalletApiGateWayService.getAccountBalance:output_type -> dapplink.AccountBalanceResponse
-	32, // 62: dapplink.WalletApiGateWayService.sendTransaction:output_type -> dapplink.SendTransactionResponse
-	34, // 63: dapplink.WalletApiGateWayService.buildTransactionSchema:output_type -> dapplink.TransactionSchemaResponse
-	38, // 64: dapplink.WalletApiGateWayService.buildUnSignTransaction:output_type -> dapplink.UnSignTransactionResponse
-	42, // 65: dapplink.WalletApiGateWayService.buildSignedTransaction:output_type -> dapplink.SignedTransactionResponse
-	45, // 66: dapplink.WalletApiGateWayService.getAddressApproveList:output_type -> dapplink.AddressApproveListResponse
-	47, // 67: dapplink.WalletApiGateWayService.buildSponsoredTransfer:output_type -> dapplink.SponsoredTransferBuildResponse
-	32, // 68: dapplink.WalletApiGateWayService.sendSponsoredTransfer:output_type -> dapplink.SendTransactionResponse
-	53, // [53:69] is the sub-list for method output_type
-	37, // [37:53] is the sub-list for method input_type
-	37, // [37:37] is the sub-list for extension type_name
-	37, // [37:37] is the sub-list for extension extendee
-	0,  // [0:37] is the sub-list for field type_name
+	51, // 36: dapplink.SponsoredTransferBuildResponse.code:type_name -> dapplink.ReturnCode
+	51, // 37: dapplink.CallContractResponse.code:type_name -> dapplink.ReturnCode
+	4,  // 38: dapplink.WalletApiGateWayService.getSupportChains:input_type -> dapplink.SupportChainRequest
+	7,  // 39: dapplink.WalletApiGateWayService.convertAddresses:input_type -> dapplink.ConvertAddressesRequest
+	10, // 40: dapplink.WalletApiGateWayService.validAddresses:input_type -> dapplink.ValidAddressesRequest
+	12, // 41: dapplink.WalletApiGateWayService.getLastestBlock:input_type -> dapplink.LastestBlockRequest
+	17, // 42: dapplink.WalletApiGateWayService.getBlock:input_type -> dapplink.BlockRequest
+	19, // 43: dapplink.WalletApiGateWayService.getBatchBlock:input_type -> dapplink.BatchBlockRequest
+	23, // 44: dapplink.WalletApiGateWayService.getTransactionByHash:input_type -> dapplink.TransactionByHashRequest
+	25, // 45: dapplink.WalletApiGateWayService.getTransactionByAddress:input_type -> dapplink.TransactionByAddressRequest
+	27, // 46: dapplink.WalletApiGateWayService.getAccountBalance:input_type -> dapplink.AccountBalanceRequest
+	30, // 47: dapplink.WalletApiGateWayService.sendTransaction:input_type -> dapplink.SendTransactionsRequest
+	33, // 48: dapplink.WalletApiGateWayService.buildTransactionSchema:input_type -> dapplink.TransactionSchemaRequest
+	37, // 49: dapplink.WalletApiGateWayService.buildUnSignTransaction:input_type -> dapplink.UnSignTransactionRequest
+	41, // 50: dapplink.WalletApiGateWayService.buildSignedTransaction:input_type -> dapplink.SignedTransactionRequest
+	44, // 51: dapplink.WalletApiGateWayService.getAddressApproveList:input_type -> dapplink.AddressApproveListRequest
+	46, // 52: dapplink.WalletApiGateWayService.buildSponsoredTransfer:input_type -> dapplink.SponsoredTransferRequest
+	48, // 53: dapplink.WalletApiGateWayService.sendSponsoredTransfer:input_type -> dapplink.SponsoredTransferSendRequest
+	49, // 54: dapplink.WalletApiGateWayService.callContract:input_type -> dapplink.CallContractRequest
+	5,  // 55: dapplink.WalletApiGateWayService.getSupportChains:output_type -> dapplink.SupportChainResponse
+	8,  // 56: dapplink.WalletApiGateWayService.convertAddresses:output_type -> dapplink.ConvertAddressesResponse
+	11, // 57: dapplink.WalletApiGateWayService.validAddresses:output_type -> dapplink.ValidAddressesResponse
+	13, // 58: dapplink.WalletApiGateWayService.getLastestBlock:output_type -> dapplink.LastestBlockResponse
+	20, // 59: dapplink.WalletApiGateWayService.getBlock:output_type -> dapplink.BlockResponse
+	22, // 60: dapplink.WalletApiGateWayService.getBatchBlock:output_type -> dapplink.BatchBlockResponse
+	24, // 61: dapplink.WalletApiGateWayService.getTransactionByHash:output_type -> dapplink.TransactionByHashResponse
+	26, // 62: dapplink.WalletApiGateWayService.getTransactionByAddress:output_type -> dapplink.TransactionByAddressResponse
+	28, // 63: dapplink.WalletApiGateWayService.getAccountBalance:output_type -> dapplink.AccountBalanceResponse
+	32, // 64: dapplink.WalletApiGateWayService.sendTransaction:output_type -> dapplink.SendTransactionResponse
+	34, // 65: dapplink.WalletApiGateWayService.buildTransactionSchema:output_type -> dapplink.TransactionSchemaResponse
+	38, // 66: dapplink.WalletApiGateWayService.buildUnSignTransaction:output_type -> dapplink.UnSignTransactionResponse
+	42, // 67: dapplink.WalletApiGateWayService.buildSignedTransaction:output_type -> dapplink.SignedTransactionResponse
+	45, // 68: dapplink.WalletApiGateWayService.getAddressApproveList:output_type -> dapplink.AddressApproveListResponse
+	47, // 69: dapplink.WalletApiGateWayService.buildSponsoredTransfer:output_type -> dapplink.SponsoredTransferBuildResponse
+	32, // 70: dapplink.WalletApiGateWayService.sendSponsoredTransfer:output_type -> dapplink.SendTransactionResponse
+	50, // 71: dapplink.WalletApiGateWayService.callContract:output_type -> dapplink.CallContractResponse
+	55, // [55:72] is the sub-list for method output_type
+	38, // [38:55] is the sub-list for method input_type
+	38, // [38:38] is the sub-list for extension type_name
+	38, // [38:38] is the sub-list for extension extendee
+	0,  // [0:38] is the sub-list for field type_name
 }
 
 func init() { file_dapplink_walletapi_proto_init() }
@@ -3691,7 +3852,7 @@ func file_dapplink_walletapi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dapplink_walletapi_proto_rawDesc), len(file_dapplink_walletapi_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   48,
+			NumMessages:   50,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -12,7 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/dapplink-labs/dapplink-wallet-api/chain"
+	"github.com/dapplink-labs/dapplink-wallet-api/chain/bitcoin"
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/bnbchain"
+	"github.com/dapplink-labs/dapplink-wallet-api/chain/ethereum"
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/solana"
 	"github.com/dapplink-labs/dapplink-wallet-api/chain/tron"
 	"github.com/dapplink-labs/dapplink-wallet-api/config"
@@ -45,15 +47,15 @@ func NewChainDispatcher(conf *config.Config) (*ChainDispatcher, error) {
 	}
 
 	chainAdaptorFactoryMap := map[string]func(conf *config.Config) (chain.IChainAdaptor, error){
-		//ethereum.ChainID: ethereum.NewChainAdaptor,
-		//bitcoin.ChainID:  bitcoin.NewChainAdaptor,
+		ethereum.ChainID: ethereum.NewChainAdaptor,
+		bitcoin.ChainID:  bitcoin.NewChainAdaptor,
 		solana.ChainID:   solana.NewChainAdaptor,
 		tron.ChainID:     tron.NewChainAdaptor,
 		bnbchain.ChainID: bnbchain.NewChainAdaptor,
 	}
 	supportedChains := []string{
-		//ethereum.ChainID,
-		//bitcoin.ChainID,
+		ethereum.ChainID,
+		bitcoin.ChainID,
 		solana.ChainID,
 		tron.ChainID,
 		bnbchain.ChainID,
@@ -289,4 +291,15 @@ func (d *ChainDispatcher) SendSponsoredTransfer(ctx context.Context, request *wa
 		}, nil
 	}
 	return d.registry[request.ChainId].SendSponsoredTransfer(ctx, request)
+}
+
+func (d *ChainDispatcher) CallContract(ctx context.Context, request *walletapi.CallContractRequest) (*walletapi.CallContractResponse, error) {
+	resp := d.preHandler(request)
+	if resp != nil {
+		return &walletapi.CallContractResponse{
+			Code: common.ReturnCode_ERROR,
+			Msg:  "call contract failed",
+		}, nil
+	}
+	return d.registry[request.ChainId].CallContract(ctx, request)
 }

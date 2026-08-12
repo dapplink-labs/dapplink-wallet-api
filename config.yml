@@ -8,19 +8,19 @@ http_server:
 chains:
   - chain_name: "Bitcoin"
     chain_id: "DappLinkBitcoin"
-    netword: mainnet
+    network: mainnet
   - chain_name: "Ethereum"
     chain_id: "DappLinkEthereum"
-    netword: mainnet
+    network: mainnet
   - chain_name: "Solana"
     chain_id: "DappLinkSolana"
-    netword: mainnet
+    network: mainnet
   - chain_name: "Tron"
     chain_id: "DappLinkTron"
-    netword: mainnet
+    network: mainnet
   - chain_name: "Bnb"
     chain_id: "DappLinkBnbChain"
-    netword: mainnet
+    network: mainnet
 
 wallet_node:
   eth:
